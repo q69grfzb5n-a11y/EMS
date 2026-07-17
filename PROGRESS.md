@@ -14,6 +14,7 @@ Living status tracker. Rule: update this file **in the same commit** as the work
 - [x] Complete folder structure created (backend/frontend/docs/scripts, all module folders)
 ### Notes / deviations
 - 2026-07-16: Code scaffolding intentionally deferred — user instructed planning files + folder structure only.
+- 2026-07-17: Correction — `git init` had **not** actually been run as of 2026-07-16 despite the checklist above; the repo was initialized today and the Phase 0 scaffold is its root commit.
 
 ## Phase 0 — Scaffolding & Dev Environment   [status: in progress]   (2026-07-17)
 - [x] Root meta files (.gitattributes, .editorconfig, .env.example)
