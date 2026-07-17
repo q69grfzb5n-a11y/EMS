@@ -16,7 +16,7 @@ Living status tracker. Rule: update this file **in the same commit** as the work
 - 2026-07-16: Code scaffolding intentionally deferred — user instructed planning files + folder structure only.
 - 2026-07-17: Correction — `git init` had **not** actually been run as of 2026-07-16 despite the checklist above; the repo was initialized today and the Phase 0 scaffold is its root commit.
 
-## Phase 0 — Scaffolding & Dev Environment   [status: in progress]   (2026-07-17)
+## Phase 0 — Scaffolding & Dev Environment   [status: done]   (2026-07-17)
 - [x] Root meta files (.gitattributes, .editorconfig, .env.example)
 - [x] scripts/check_line_limits.py + check_all.ps1/.sh
 - [x] Backend: uv project + FastAPI /health + SQLAlchemy base + Alembic wired
@@ -26,9 +26,12 @@ Living status tracker. Rule: update this file **in the same commit** as the work
 - [x] docker-compose.yml + docker-compose.dev.yml
 - [x] CI workflow + pre-commit hooks
 - [x] docs/ skeleton files
-- [ ] DEMO GATE: compose up boots bilingual stack; all gates green
+- [x] DEMO GATE: compose up boots bilingual stack; all gates green
 ### Notes / deviations
-- 2026-07-17: Docker Desktop is not installed on this dev machine, so `docker compose up` has **not** been run/verified end-to-end. Verified instead in isolation: `uv run uvicorn` serves `/health` (200, db reports connected/unavailable correctly), `ruff`/`mypy`/`pytest` all pass on backend; `npm run dev`/`build` serve the Arabic RTL shell correctly, `eslint`/`vitest`/`tsc` all pass on frontend. docker-compose YAML + Dockerfiles syntax-validated but not built. **Action for owner: install Docker Desktop and run the demo-gate command to close this phase out.**
+- 2026-07-17: Docker Desktop + WSL2 installed on the dev machine (were missing). Full demo gate verified end-to-end:
+  - `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build` → `GET /health` on :8000 returns `{"status":"ok","db":"connected"}` against the real postgres container; frontend on :5173 serves the Arabic RTL shell.
+  - `docker compose up --build` (prod-shaped, single-origin) → frontend on :80 serves the RTL shell via nginx; `/api/v1/*` proxies through to the backend (confirmed via a live FastAPI 404, not an nginx gateway error); backend `/health` (not published, checked via `docker exec`) returns `db:"connected"`.
+  - Fixed two real bugs surfaced only by the actual Docker build (not caught by bare-metal `uv run`): (1) `backend/Dockerfile` ran `uv sync` before `app/__init__.py` was copied into the image — split into a cached deps-only `uv sync --no-install-project` layer followed by the real sync after `COPY`; (2) the prod stage didn't copy `README.md`, which `pyproject.toml`'s `readme =` field requires at build time.
 - 2026-07-17: `uv init` initially created a nested git repo + `src/` package layout inside `backend/`; removed and rebuilt to the flat `app/` layout INSTRUCTIONS.md specifies.
 - 2026-07-17: docs/ skeleton written per PLAN §10 (architecture, database-schema, api-reference, calculation-engine, user-roles, workflows, attendance-import, kpi-templates, deployment, development, i18n-guide, ADR template). **`docs/source/` is empty** — the real workbook/Word/attendance files PLAN.md references (`Precast Incentives 03-2026 (1).xlsm`, 3 Word drafts, Oracle attendance export) are not actually in the repo yet; needed before Phase 2/7 can proceed for real.
 - 2026-07-17: docs/ skeleton files (architecture.md, database-schema.md, etc. per PLAN §10) deferred — not blocking the demo gate, will add alongside the content they document.

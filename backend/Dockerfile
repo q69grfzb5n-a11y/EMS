@@ -16,8 +16,9 @@ COPY pyproject.toml uv.lock ./
 
 # --- dev target: editable install with dev dependencies, source bind-mounted at runtime ---
 FROM base AS dev
-RUN uv sync --frozen
+RUN uv sync --frozen --no-install-project
 COPY . .
+RUN uv sync --frozen
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
@@ -25,10 +26,11 @@ CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "800
 
 # --- prod target: no dev deps, no bind mount ---
 FROM base AS prod
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-install-project --no-dev
 COPY app ./app
 COPY alembic ./alembic
-COPY alembic.ini ./
+COPY alembic.ini README.md ./
+RUN uv sync --frozen --no-dev
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
