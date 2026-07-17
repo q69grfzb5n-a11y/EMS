@@ -25,11 +25,12 @@ Living status tracker. Rule: update this file **in the same commit** as the work
 - [x] Frontend Dockerfile + nginx.conf (/api proxy)
 - [x] docker-compose.yml + docker-compose.dev.yml
 - [x] CI workflow + pre-commit hooks
-- [ ] docs/ skeleton files
+- [x] docs/ skeleton files
 - [ ] DEMO GATE: compose up boots bilingual stack; all gates green
 ### Notes / deviations
 - 2026-07-17: Docker Desktop is not installed on this dev machine, so `docker compose up` has **not** been run/verified end-to-end. Verified instead in isolation: `uv run uvicorn` serves `/health` (200, db reports connected/unavailable correctly), `ruff`/`mypy`/`pytest` all pass on backend; `npm run dev`/`build` serve the Arabic RTL shell correctly, `eslint`/`vitest`/`tsc` all pass on frontend. docker-compose YAML + Dockerfiles syntax-validated but not built. **Action for owner: install Docker Desktop and run the demo-gate command to close this phase out.**
 - 2026-07-17: `uv init` initially created a nested git repo + `src/` package layout inside `backend/`; removed and rebuilt to the flat `app/` layout INSTRUCTIONS.md specifies.
+- 2026-07-17: docs/ skeleton written per PLAN §10 (architecture, database-schema, api-reference, calculation-engine, user-roles, workflows, attendance-import, kpi-templates, deployment, development, i18n-guide, ADR template). **`docs/source/` is empty** — the real workbook/Word/attendance files PLAN.md references (`Precast Incentives 03-2026 (1).xlsm`, 3 Word drafts, Oracle attendance export) are not actually in the repo yet; needed before Phase 2/7 can proceed for real.
 - 2026-07-17: docs/ skeleton files (architecture.md, database-schema.md, etc. per PLAN §10) deferred — not blocking the demo gate, will add alongside the content they document.
 
 ## Phase 1 — Auth, Users, RBAC   [status: not started]

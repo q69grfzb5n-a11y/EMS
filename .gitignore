@@ -22,6 +22,7 @@ dist/
 # IDE / OS
 .vscode/
 .idea/
+.claude/
 Thumbs.db
 .DS_Store
 
