@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "Incentive Management System"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "employees": "Employees",
+    "org": "Organization",
+    "kpiTemplates": "KPI Templates",
+    "attendance": "Attendance",
+    "approvals": "Approvals",
+    "incentives": "Incentives",
+    "finance": "Finance",
+    "audit": "Audit Log"
+  },
+  "auth": {
+    "login": "Log in",
+    "staffNo": "Staff Number",
+    "password": "Password",
+    "logout": "Log out"
+  },
+  "language": {
+    "switchTo": "العربية"
+  }
+}

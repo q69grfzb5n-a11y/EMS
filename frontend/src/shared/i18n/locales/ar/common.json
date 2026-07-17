@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "نظام إدارة الحوافز"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "employees": "الموظفون",
+    "org": "الهيكل التنظيمي",
+    "kpiTemplates": "نماذج التقييم",
+    "attendance": "الحضور",
+    "approvals": "الموافقات",
+    "incentives": "الحوافز",
+    "finance": "المالية",
+    "audit": "سجل التدقيق"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "staffNo": "الرقم الوظيفي",
+    "password": "كلمة المرور",
+    "logout": "تسجيل الخروج"
+  },
+  "language": {
+    "switchTo": "English"
+  }
+}
