@@ -153,14 +153,14 @@ export function UsersAdminPage() {
           }
         >
           <Form.Item name="staffNo" label={t("auth:users.staffNo")} rules={[{ required: true }]}>
-            <Input />
+            <Input dir="ltr" />
           </Form.Item>
           <Form.Item
             name="password"
             label={t("auth:users.password")}
             rules={[{ required: true, min: 8 }]}
           >
-            <Input.Password />
+            <Input.Password dir="ltr" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={createMutation.isPending} block>
@@ -204,7 +204,7 @@ export function UsersAdminPage() {
               label={t("auth:users.newPassword")}
               rules={[{ required: true, min: 8 }]}
             >
-              <Input.Password autoFocus />
+              <Input.Password autoFocus dir="ltr" />
             </Form.Item>
             <Form.Item>
               <Button

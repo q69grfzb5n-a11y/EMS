@@ -45,10 +45,10 @@ export function LoginPage() {
         {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} showIcon />}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item name="staffNo" label={t("auth.staffNo")} rules={[{ required: true }]}>
-            <Input autoFocus />
+            <Input autoFocus dir="ltr" />
           </Form.Item>
           <Form.Item name="password" label={t("auth.password")} rules={[{ required: true }]}>
-            <Input.Password />
+            <Input.Password dir="ltr" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={submitting}>

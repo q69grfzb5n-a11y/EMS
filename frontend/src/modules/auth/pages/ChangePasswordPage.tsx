@@ -57,14 +57,14 @@ export function ChangePasswordPage() {
             label={t("auth:changePassword.currentPassword")}
             rules={[{ required: true }]}
           >
-            <Input.Password autoFocus />
+            <Input.Password autoFocus dir="ltr" />
           </Form.Item>
           <Form.Item
             name="newPassword"
             label={t("auth:changePassword.newPassword")}
             rules={[{ required: true, min: 8 }]}
           >
-            <Input.Password />
+            <Input.Password dir="ltr" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={submitting}>
