@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { Alert, Button, Card, Form, Input, Typography, message } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +28,9 @@ export function ChangePasswordPage() {
       await changePassword(values.currentPassword, values.newPassword);
       updateUser({ must_change_password: false });
       void message.success(t("auth:changePassword.success"));
-      navigate("/", { replace: true });
+      startTransition(() => {
+        navigate("/", { replace: true });
+      });
     } catch (err) {
       const code = isAxiosError(err) ? err.response?.data?.error?.code : undefined;
       setError(code ? t(`auth:errors.${code}`) : t("auth:errors.invalid_current_password"));

@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { Button, Layout, Space, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -20,7 +21,9 @@ export function AppShell() {
       await logoutRequest();
     } finally {
       clearAuth();
-      navigate("/login", { replace: true });
+      startTransition(() => {
+        navigate("/login", { replace: true });
+      });
     }
   };
 

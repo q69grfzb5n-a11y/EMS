@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { Alert, Button, Card, Form, Input, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +28,9 @@ export function LoginPage() {
       useAuthStore.getState().setAccessToken(token.access_token);
       const me = await fetchMe();
       setSession(token.access_token, me);
-      navigate(me.must_change_password ? "/change-password" : "/", { replace: true });
+      startTransition(() => {
+        navigate(me.must_change_password ? "/change-password" : "/", { replace: true });
+      });
     } catch (err) {
       const code = isAxiosError(err) ? err.response?.data?.error?.code : undefined;
       setError(code ? t(`auth:errors.${code}`) : t("auth:errors.invalid_credentials"));
