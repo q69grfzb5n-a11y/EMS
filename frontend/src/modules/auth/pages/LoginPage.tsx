@@ -2,11 +2,11 @@ import { startTransition, useState } from "react";
 import { Alert, Button, Card, Form, Input, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { isAxiosError } from "axios";
 
 import { fetchMe, login as loginRequest } from "@/modules/auth/api/authApi";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
+import { extractApiErrorCode } from "@/shared/utils/apiError";
 
 interface LoginFormValues {
   staffNo: string;
@@ -32,8 +32,7 @@ export function LoginPage() {
         navigate(me.must_change_password ? "/change-password" : "/", { replace: true });
       });
     } catch (err) {
-      const code = isAxiosError(err) ? err.response?.data?.error?.code : undefined;
-      setError(code ? t(`auth:errors.${code}`) : t("auth:errors.invalid_credentials"));
+      setError(t(`auth:errors.${extractApiErrorCode(err)}`));
     } finally {
       setSubmitting(false);
     }

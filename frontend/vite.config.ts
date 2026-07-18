@@ -11,7 +11,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
+      // "localhost" only resolves to the backend when running bare-metal; inside the
+      // dockerized dev stack the backend is a separate container reachable by its
+      // compose service name — see VITE_API_PROXY_TARGET in docker-compose.dev.yml.
+      "/api": process.env.VITE_API_PROXY_TARGET ?? "http://localhost:8000",
     },
   },
   test: {
