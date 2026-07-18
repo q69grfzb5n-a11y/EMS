@@ -6,6 +6,7 @@ import { isAxiosError } from "axios";
 
 import { fetchMe, login as loginRequest } from "@/modules/auth/api/authApi";
 import { useAuthStore } from "@/shared/auth/authStore";
+import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
 
 interface LoginFormValues {
   staffNo: string;
@@ -45,10 +46,10 @@ export function LoginPage() {
         {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} showIcon />}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item name="staffNo" label={t("auth.staffNo")} rules={[{ required: true }]}>
-            <Input autoFocus dir="ltr" />
+            <Input autoFocus dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item name="password" label={t("auth.password")} rules={[{ required: true }]}>
-            <Input.Password dir="ltr" />
+            <Input.Password dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={submitting}>

@@ -6,6 +6,7 @@ import { isAxiosError } from "axios";
 
 import { changePassword } from "@/modules/auth/api/authApi";
 import { useAuthStore } from "@/shared/auth/authStore";
+import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
 
 interface ChangePasswordFormValues {
   currentPassword: string;
@@ -57,14 +58,14 @@ export function ChangePasswordPage() {
             label={t("auth:changePassword.currentPassword")}
             rules={[{ required: true }]}
           >
-            <Input.Password autoFocus dir="ltr" />
+            <Input.Password autoFocus dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item
             name="newPassword"
             label={t("auth:changePassword.newPassword")}
             rules={[{ required: true, min: 8 }]}
           >
-            <Input.Password dir="ltr" />
+            <Input.Password dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={submitting}>

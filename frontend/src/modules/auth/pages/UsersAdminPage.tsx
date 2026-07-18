@@ -25,6 +25,7 @@ import {
 import type { RoleOut, UserOut } from "@/modules/auth/types";
 import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
+import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
 import { hasPermission } from "@/shared/auth/permissions";
 
 export function UsersAdminPage() {
@@ -153,14 +154,14 @@ export function UsersAdminPage() {
           }
         >
           <Form.Item name="staffNo" label={t("auth:users.staffNo")} rules={[{ required: true }]}>
-            <Input dir="ltr" />
+            <Input dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item
             name="password"
             label={t("auth:users.password")}
             rules={[{ required: true, min: 8 }]}
           >
-            <Input.Password dir="ltr" />
+            <Input.Password dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={createMutation.isPending} block>
@@ -204,7 +205,7 @@ export function UsersAdminPage() {
               label={t("auth:users.newPassword")}
               rules={[{ required: true, min: 8 }]}
             >
-              <Input.Password autoFocus dir="ltr" />
+              <Input.Password autoFocus dir="ltr" styles={LTR_INPUT_STYLES} />
             </Form.Item>
             <Form.Item>
               <Button
