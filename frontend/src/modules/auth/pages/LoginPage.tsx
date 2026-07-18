@@ -1,5 +1,11 @@
-import { Button, Card, Form, Input, Typography } from "antd";
+import { useState } from "react";
+import { Alert, Button, Card, Form, Input, Typography } from "antd";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
+
+import { fetchMe, login as loginRequest } from "@/modules/auth/api/authApi";
+import { useAuthStore } from "@/shared/auth/authStore";
 
 interface LoginFormValues {
   staffNo: string;
@@ -7,11 +13,27 @@ interface LoginFormValues {
 }
 
 export function LoginPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common", "auth"]);
+  const navigate = useNavigate();
+  const setSession = useAuthStore((state) => state.setSession);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const onFinish = (values: LoginFormValues) => {
-    // Wired up to POST /auth/login in Phase 1.
-    console.info("login submitted", values);
+  const onFinish = async (values: LoginFormValues) => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const token = await loginRequest(values.staffNo, values.password);
+      useAuthStore.getState().setAccessToken(token.access_token);
+      const me = await fetchMe();
+      setSession(token.access_token, me);
+      navigate(me.must_change_password ? "/change-password" : "/", { replace: true });
+    } catch (err) {
+      const code = isAxiosError(err) ? err.response?.data?.error?.code : undefined;
+      setError(code ? t(`auth:errors.${code}`) : t("auth:errors.invalid_credentials"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -20,23 +42,16 @@ export function LoginPage() {
         <Typography.Title level={3} style={{ textAlign: "center" }}>
           {t("app.name")}
         </Typography.Title>
+        {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} showIcon />}
         <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item
-            name="staffNo"
-            label={t("auth.staffNo")}
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="staffNo" label={t("auth.staffNo")} rules={[{ required: true }]}>
             <Input autoFocus />
           </Form.Item>
-          <Form.Item
-            name="password"
-            label={t("auth.password")}
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="password" label={t("auth.password")} rules={[{ required: true }]}>
             <Input.Password />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={submitting}>
               {t("auth.login")}
             </Button>
           </Form.Item>

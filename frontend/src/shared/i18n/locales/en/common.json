@@ -11,7 +11,8 @@
     "approvals": "Approvals",
     "incentives": "Incentives",
     "finance": "Finance",
-    "audit": "Audit Log"
+    "audit": "Audit Log",
+    "users": "Users & Roles"
   },
   "auth": {
     "login": "Log in",
@@ -21,5 +22,10 @@
   },
   "language": {
     "switchTo": "العربية"
+  },
+  "common": {
+    "notPermitted": "You don't have permission to view this page.",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

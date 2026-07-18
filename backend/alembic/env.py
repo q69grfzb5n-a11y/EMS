@@ -2,12 +2,12 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+# Force model modules to import so their tables register on Base.metadata.
+import app.common.models  # noqa: F401,E402
+import app.modules.auth.models  # noqa: F401,E402
 from alembic import context
 from app.core.config import get_settings
 from app.db.base import Base
-
-# Force model modules to import so their tables register on Base.metadata.
-# (Populated as each module adds models.py in later phases.)
 
 config = context.config
 

@@ -11,7 +11,8 @@
     "approvals": "الموافقات",
     "incentives": "الحوافز",
     "finance": "المالية",
-    "audit": "سجل التدقيق"
+    "audit": "سجل التدقيق",
+    "users": "المستخدمون والأدوار"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -21,5 +22,10 @@
   },
   "language": {
     "switchTo": "English"
+  },
+  "common": {
+    "notPermitted": "لا تملك صلاحية الوصول لهذه الصفحة.",
+    "save": "حفظ",
+    "cancel": "إلغاء"
   }
 }

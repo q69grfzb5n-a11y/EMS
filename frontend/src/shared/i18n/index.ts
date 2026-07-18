@@ -7,11 +7,28 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const DEFAULT_LANGUAGE: SupportedLanguage = "ar";
 
+// Every module owns its own locales/<lang>/<namespace>.json — this glob discovers
+// them all so useTranslation("<namespace>") works without a central registry to update.
+const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
+  "./locales/*/*.json",
+  "../../modules/*/locales/*/*.json",
+]);
+
+const localeLoaders = new Map<string, () => Promise<{ default: Record<string, unknown> }>>();
+for (const [path, loader] of Object.entries(localeModules)) {
+  const match = /locales\/([a-z]+)\/([a-zA-Z0-9_-]+)\.json$/.exec(path);
+  if (match) {
+    const [, language, namespace] = match;
+    localeLoaders.set(`${language}/${namespace}`, loader);
+  }
+}
+
 void i18next
   .use(initReactI18next)
   .use(
     resourcesToBackend((language: string, namespace: string) => {
-      return import(`./locales/${language}/${namespace}.json`);
+      const loader = localeLoaders.get(`${language}/${namespace}`);
+      return loader ? loader() : Promise.resolve({ default: {} });
     }),
   )
   .init({
