@@ -26,6 +26,12 @@
   "common": {
     "notPermitted": "لا تملك صلاحية الوصول لهذه الصفحة.",
     "save": "حفظ",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "edit": "تعديل",
+    "search": "بحث...",
+    "totalRows": "{{count}} صف",
+    "active": "نشط",
+    "inactive": "غير نشط"
   }
 }

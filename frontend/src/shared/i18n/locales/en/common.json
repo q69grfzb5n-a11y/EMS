@@ -26,6 +26,12 @@
   "common": {
     "notPermitted": "You don't have permission to view this page.",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "create": "Create",
+    "edit": "Edit",
+    "search": "Search...",
+    "totalRows": "{{count}} rows",
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

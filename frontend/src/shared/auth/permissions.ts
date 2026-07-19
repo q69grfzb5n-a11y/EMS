@@ -15,6 +15,9 @@ export type RoleCode = (typeof ROLES)[keyof typeof ROLES];
 export const PERMISSIONS = {
   MANAGE_USERS: [ROLES.ADMIN, ROLES.HR],
   MANAGE_ROLES: [ROLES.HR],
+  MANAGE_ORG: [ROLES.HR],
+  MANAGE_EMPLOYEES: [ROLES.HR],
+  VIEW_SALARY: [ROLES.HR, ROLES.FINANCE, ROLES.PMO],
 } as const satisfies Record<string, readonly RoleCode[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

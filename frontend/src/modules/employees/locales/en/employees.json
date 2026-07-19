@@ -1,0 +1,34 @@
+{
+  "title": "Employees",
+  "create": "New Employee",
+  "staffNo": "Staff Number",
+  "name": "Name",
+  "nameAr": "Name (Arabic)",
+  "nameEn": "Name (English)",
+  "department": "Department",
+  "position": "Position",
+  "status": "Status",
+  "contractTitle": "Contract Position Title",
+  "statusValues": {
+    "active": "Active",
+    "terminated": "Terminated"
+  },
+  "errors": {
+    "staffNoTaken": "An employee with this staff number already exists."
+  },
+  "tabs": {
+    "overview": "Overview",
+    "reviewer": "Reviewer",
+    "salary": "Salary"
+  },
+  "reviewer": {
+    "current": "Current reviewer (user id)",
+    "none": "Not assigned",
+    "assign": "Assign reviewer"
+  },
+  "salary": {
+    "baseSalary": "Base Salary",
+    "addNew": "Add New Salary Window",
+    "overlapError": "This date range overlaps an existing salary window."
+  }
+}

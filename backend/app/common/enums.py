@@ -1,6 +1,11 @@
 from enum import StrEnum
 
 
+class EmploymentStatus(StrEnum):
+    ACTIVE = "active"
+    TERMINATED = "terminated"
+
+
 class RoleCode(StrEnum):
     HR = "hr"
     ADMIN = "admin"

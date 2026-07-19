@@ -2,7 +2,9 @@
 """Idempotent seed script. Usage: uv run python scripts/seed.py --core"""
 
 import argparse
+import json
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -14,6 +16,9 @@ from app.common.enums import RoleCode
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.modules.auth.models import Role, User, UserRole
+from app.modules.org.models import Department, Position, PositionRate
+
+SEED_DATA_DIR = Path(__file__).resolve().parent.parent / "app" / "db" / "seed_data"
 
 ROLES: list[tuple[RoleCode, str, str]] = [
     (RoleCode.HR, "HR", "الموارد البشرية"),
@@ -80,6 +85,67 @@ def seed_admin_user(db: Session, roles_by_code: dict[str, Role]) -> None:
     db.commit()
 
 
+
+# Flat rates predate the system; no real effective date is known, so they're seeded as open
+# windows starting from a fixed epoch. Superseded once HR provides dated position_rates.
+RATE_CARD_EPOCH = "2020-01-01"
+
+
+def seed_departments(db: Session) -> None:
+    data = json.loads((SEED_DATA_DIR / "departments.json").read_text(encoding="utf-8"))
+    for row in data:
+        dept = db.scalars(select(Department).where(Department.code == row["code"])).first()
+        if dept is None:
+            dept = Department(**row)
+            db.add(dept)
+            print(f"  + created department {row['code']}")
+        else:
+            dept.name_en = row["name_en"]
+            dept.name_ar = row["name_ar"]
+            dept.is_active = row["is_active"]
+    db.commit()
+
+
+def seed_positions(db: Session) -> None:
+    data = json.loads((SEED_DATA_DIR / "positions.json").read_text(encoding="utf-8"))
+    for row in data:
+        position = db.scalars(select(Position).where(Position.code == row["code"])).first()
+        if position is None:
+            position = Position(
+                code=row["code"],
+                title_en=row["title_en"],
+                title_ar=row["title_ar"],
+                is_active=row["is_active"],
+            )
+            db.add(position)
+            db.flush()
+            print(f"  + created position {row['code']}")
+        else:
+            position.title_en = row["title_en"]
+            position.title_ar = row["title_ar"]
+            position.is_active = row["is_active"]
+
+        rate = db.scalars(
+            select(PositionRate).where(
+                PositionRate.position_id == position.id,
+                PositionRate.effective_to.is_(None),
+            )
+        ).first()
+        flat_ref_amount = Decimal(str(row["flat_ref_amount"]))
+        if rate is None:
+            db.add(
+                PositionRate(
+                    position_id=position.id,
+                    effective_from=RATE_CARD_EPOCH,
+                    flat_ref_amount=flat_ref_amount,
+                )
+            )
+            print(f"  + created open rate window for {row['code']} ({flat_ref_amount} SAR)")
+        else:
+            rate.flat_ref_amount = flat_ref_amount
+    db.commit()
+
+
 def seed_core() -> None:
     db = SessionLocal()
     try:
@@ -87,6 +153,10 @@ def seed_core() -> None:
         roles_by_code = seed_roles(db)
         print("Seeding admin user...")
         seed_admin_user(db, roles_by_code)
+        print("Seeding departments...")
+        seed_departments(db)
+        print("Seeding positions + flat rates...")
+        seed_positions(db)
         print("Core seed complete.")
     finally:
         db.close()

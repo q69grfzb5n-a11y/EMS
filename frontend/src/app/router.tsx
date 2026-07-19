@@ -36,6 +36,36 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "employees",
+            lazy: async () => {
+              const { EmployeesListPage } = await import(
+                "@/modules/employees/pages/EmployeesListPage"
+              );
+              return { Component: EmployeesListPage };
+            },
+          },
+          {
+            path: "employees/:id",
+            lazy: async () => {
+              const { EmployeeDetailPage } = await import(
+                "@/modules/employees/pages/EmployeeDetailPage"
+              );
+              return { Component: EmployeeDetailPage };
+            },
+          },
+          {
+            element: <RequirePermission permission="MANAGE_ORG" />,
+            children: [
+              {
+                path: "org",
+                lazy: async () => {
+                  const { OrgPage } = await import("@/modules/org/pages/OrgPage");
+                  return { Component: OrgPage };
+                },
+              },
+            ],
+          },
+          {
             element: <RequirePermission permission="MANAGE_ROLES" />,
             children: [
               {

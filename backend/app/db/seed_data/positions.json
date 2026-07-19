@@ -1,0 +1,324 @@
+[
+  {
+    "code": "admin_1",
+    "title_en": "Admin 1",
+    "title_ar": "إداري 1",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "admin_2",
+    "title_en": "Admin 2",
+    "title_ar": "إداري 2",
+    "flat_ref_amount": 900,
+    "is_active": true
+  },
+  {
+    "code": "carpenter",
+    "title_en": "Carpenter",
+    "title_ar": "نجار",
+    "flat_ref_amount": 600,
+    "is_active": true
+  },
+  {
+    "code": "coordinator",
+    "title_en": "Coordinator",
+    "title_ar": "منسق",
+    "flat_ref_amount": 1100,
+    "is_active": true
+  },
+  {
+    "code": "data_entry",
+    "title_en": "Data Entry",
+    "title_ar": "مدخل بيانات",
+    "flat_ref_amount": 650,
+    "is_active": true
+  },
+  {
+    "code": "driver_1",
+    "title_en": "Driver 1",
+    "title_ar": "سائق 1",
+    "flat_ref_amount": 900,
+    "is_active": true
+  },
+  {
+    "code": "driver_2",
+    "title_en": "Driver 2",
+    "title_ar": "سائق 2",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "elec_sup",
+    "title_en": "Elec Sup",
+    "title_ar": "مشرف كهرباء",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "elec_tech",
+    "title_en": "Elec Tech",
+    "title_ar": "فني كهرباء",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "electrician",
+    "title_en": "Electrician",
+    "title_ar": "كهربائي",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "engineer_1",
+    "title_en": "Engineer 1",
+    "title_ar": "مهندس 1",
+    "flat_ref_amount": 2700,
+    "is_active": true
+  },
+  {
+    "code": "engineer_2",
+    "title_en": "Engineer 2",
+    "title_ar": "مهندس 2",
+    "flat_ref_amount": 2200,
+    "is_active": true
+  },
+  {
+    "code": "erec_tech_1",
+    "title_en": "Erec Tech 1",
+    "title_ar": "فني تركيب 1",
+    "flat_ref_amount": 900,
+    "is_active": true
+  },
+  {
+    "code": "erec_tech_2",
+    "title_en": "Erec Tech 2",
+    "title_ar": "فني تركيب 2",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "est_officer",
+    "title_en": "Est. Officer",
+    "title_ar": "مسؤول تقدير التكاليف",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "fabricator",
+    "title_en": "Fabricator",
+    "title_ar": "حداد",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "welder",
+    "title_en": "Welder",
+    "title_ar": "لحام",
+    "flat_ref_amount": 850,
+    "is_active": true
+  },
+  {
+    "code": "foreman_1",
+    "title_en": "Foreman 1",
+    "title_ar": "ملاحظ 1",
+    "flat_ref_amount": 1700,
+    "is_active": true
+  },
+  {
+    "code": "foreman_2",
+    "title_en": "Foreman 2",
+    "title_ar": "ملاحظ 2",
+    "flat_ref_amount": 1300,
+    "is_active": true
+  },
+  {
+    "code": "labor",
+    "title_en": "Labor",
+    "title_ar": "عامل",
+    "flat_ref_amount": 600,
+    "is_active": true
+  },
+  {
+    "code": "mason",
+    "title_en": "Mason",
+    "title_ar": "بناء",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "mason_2",
+    "title_en": "Mason 2",
+    "title_ar": "بناء 2",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "mech_sup",
+    "title_en": "Mech Sup",
+    "title_ar": "مشرف ميكانيكا",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "mech_tech",
+    "title_en": "Mech Tech",
+    "title_ar": "فني ميكانيكا",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "operator_1",
+    "title_en": "Operator 1",
+    "title_ar": "مشغل 1",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "operator_2",
+    "title_en": "Operator 2",
+    "title_ar": "مشغل 2",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "operator_3",
+    "title_en": "Operator 3",
+    "title_ar": "مشغل 3",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "other",
+    "title_en": "Other",
+    "title_ar": "أخرى",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "qc_inspector_1",
+    "title_en": "QC Inspector 1",
+    "title_ar": "مفتش جودة 1",
+    "flat_ref_amount": 1500,
+    "is_active": true
+  },
+  {
+    "code": "qc_inspector_2",
+    "title_en": "QC Inspector 2",
+    "title_ar": "مفتش جودة 2",
+    "flat_ref_amount": 1300,
+    "is_active": true
+  },
+  {
+    "code": "qc_inspector_3",
+    "title_en": "QC Inspector 3",
+    "title_ar": "مفتش جودة 3",
+    "flat_ref_amount": 1100,
+    "is_active": true
+  },
+  {
+    "code": "repair",
+    "title_en": "Repair",
+    "title_ar": "إصلاح",
+    "flat_ref_amount": 850,
+    "is_active": true
+  },
+  {
+    "code": "safety_1",
+    "title_en": "Safety 1",
+    "title_ar": "سلامة 1",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "safety_2",
+    "title_en": "Safety 2",
+    "title_ar": "سلامة 2",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "sandblaster",
+    "title_en": "Sandblaster",
+    "title_ar": "عامل سفع رملي",
+    "flat_ref_amount": 850,
+    "is_active": true
+  },
+  {
+    "code": "scm_1",
+    "title_en": "SCM 1",
+    "title_ar": "سلسلة إمداد 1",
+    "flat_ref_amount": 1400,
+    "is_active": true
+  },
+  {
+    "code": "scm_2",
+    "title_en": "SCM-2",
+    "title_ar": "سلسلة إمداد 2",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "scm_3",
+    "title_en": "SCM-3",
+    "title_ar": "سلسلة إمداد 3",
+    "flat_ref_amount": 1000,
+    "is_active": true
+  },
+  {
+    "code": "steel_fixer",
+    "title_en": "Steel Fixer",
+    "title_ar": "حداد تسليح",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "supervisor",
+    "title_en": "Supervisor",
+    "title_ar": "مشرف",
+    "flat_ref_amount": 2000,
+    "is_active": true
+  },
+  {
+    "code": "surveyor",
+    "title_en": "Surveyor",
+    "title_ar": "مساح",
+    "flat_ref_amount": 1200,
+    "is_active": true
+  },
+  {
+    "code": "technician_1",
+    "title_en": "Technician 1",
+    "title_ar": "فني 1",
+    "flat_ref_amount": 900,
+    "is_active": true
+  },
+  {
+    "code": "technician_2",
+    "title_en": "Technician 2",
+    "title_ar": "فني 2",
+    "flat_ref_amount": 800,
+    "is_active": true
+  },
+  {
+    "code": "technician_3",
+    "title_en": "Technician 3",
+    "title_ar": "فني 3",
+    "flat_ref_amount": 700,
+    "is_active": true
+  },
+  {
+    "code": "detailer_1",
+    "title_en": "Detailer 1",
+    "title_ar": "مفصل 1",
+    "flat_ref_amount": 2200,
+    "is_active": true
+  },
+  {
+    "code": "detailer_2",
+    "title_en": "Detailer 2",
+    "title_ar": "مفصل 2",
+    "flat_ref_amount": 2000,
+    "is_active": true
+  }
+]

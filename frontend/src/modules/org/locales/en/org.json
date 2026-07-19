@@ -1,0 +1,30 @@
+{
+  "title": "Organization",
+  "code": "Code",
+  "name": "Name",
+  "nameEn": "Name (English)",
+  "nameAr": "Name (Arabic)",
+  "title_": "Title",
+  "titleEn": "Title (English)",
+  "titleAr": "Title (Arabic)",
+  "departments": {
+    "title": "Departments",
+    "create": "New Department"
+  },
+  "positions": {
+    "title": "Positions",
+    "create": "New Position",
+    "currentRate": "Current Rate",
+    "noRate": "No rate set",
+    "rates": "Rate History"
+  },
+  "rates": {
+    "from": "Effective From",
+    "to": "Effective To",
+    "openEnded": "Open-ended",
+    "flatAmount": "Flat Amount",
+    "incentivePct": "Incentive %",
+    "addNew": "Add New Rate Window",
+    "overlapError": "This date range overlaps an existing rate window."
+  }
+}

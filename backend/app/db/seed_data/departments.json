@@ -1,0 +1,56 @@
+[
+  {
+    "code": "MGMT",
+    "name_en": "Management",
+    "name_ar": "الإدارة",
+    "is_active": true
+  },
+  {
+    "code": "PROD",
+    "name_en": "Production",
+    "name_ar": "الإنتاج",
+    "is_active": true
+  },
+  {
+    "code": "TECH",
+    "name_en": "Technical",
+    "name_ar": "الفني",
+    "is_active": true
+  },
+  {
+    "code": "HC",
+    "name_en": "Hollowcore",
+    "name_ar": "الهولوكور",
+    "is_active": true
+  },
+  {
+    "code": "QC",
+    "name_en": "Quality Control",
+    "name_ar": "مراقبة الجودة",
+    "is_active": true
+  },
+  {
+    "code": "MAINT",
+    "name_en": "Maintenance",
+    "name_ar": "الصيانة",
+    "is_active": true
+  },
+  {
+    "code": "INST",
+    "name_en": "Installation",
+    "name_ar": "التركيب",
+    "is_active": true
+  },
+  {
+    "code": "SCM",
+    "name_en": "Supply Chain Management",
+    "name_ar": "سلسلة الإمداد",
+    "is_active": true
+  },
+  {
+    "code": "ENGS",
+    "name_en": "Engineers",
+    "name_ar": "المهندسون",
+    "is_active": true
+  }
+]

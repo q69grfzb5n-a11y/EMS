@@ -11,8 +11,9 @@ class User(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     staff_no: Mapped[str] = mapped_column(String(20), unique=True, index=True)
-    # Nullable until the `employees` table lands in Phase 2, which will add the FK.
-    employee_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    employee_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("employees.id"), nullable=True
+    )
     password_hash: Mapped[str] = mapped_column(String(255))
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
