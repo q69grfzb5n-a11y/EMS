@@ -1,0 +1,37 @@
+{
+  "title": "KPI Templates",
+  "create": "New Template",
+  "code": "Code",
+  "name": "Name",
+  "nameEn": "Name (English)",
+  "nameAr": "Name (Arabic)",
+  "activeVersion": "Active Version",
+  "noActiveVersion": "No active version",
+  "cloneVersion": "Clone to New Draft",
+  "activated": "Version activated.",
+  "activate": "Activate This Version",
+  "totalMarks": "{{total}} / 100",
+  "criterionName": "Criterion",
+  "maxMarks": "Max Marks",
+  "inputMode": "Input Mode",
+  "allowNegative": "Allow Negative",
+  "autoSource": "Auto Source",
+  "addCriterion": "Add Criterion",
+  "deleteCriterion": "Delete",
+  "confirmDeleteCriterion": "Remove this criterion from the draft?",
+  "activeNotice": "This version is active — criteria are frozen. Clone it to make changes.",
+  "archivedNotice": "This version is archived — criteria are frozen.",
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "archived": "Archived"
+  },
+  "inputModeValues": {
+    "marks": "Marks",
+    "scale_1_5": "1–5 Scale"
+  },
+  "errors": {
+    "codeTaken": "A template with this code already exists.",
+    "sumInvalid": "Criteria max marks must sum to exactly 100 before activating."
+  }
+}

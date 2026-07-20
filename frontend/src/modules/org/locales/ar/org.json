@@ -16,7 +16,10 @@
     "create": "مسمى وظيفي جديد",
     "currentRate": "المعدل الحالي",
     "noRate": "لا يوجد معدل",
-    "rates": "سجل المعدلات"
+    "rates": "سجل المعدلات",
+    "kpiTemplate": "نموذج التقييم",
+    "assignKpiTemplate": "تعيين نموذج تقييم",
+    "assignmentOverlapError": "هذا النطاق الزمني يتداخل مع تعيين نموذج تقييم موجود."
   },
   "rates": {
     "from": "ساري من",

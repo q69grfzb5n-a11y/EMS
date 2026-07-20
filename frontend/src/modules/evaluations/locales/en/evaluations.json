@@ -1,0 +1,42 @@
+{
+  "title": "Evaluations",
+  "staffNo": "Staff Number",
+  "employeeName": "Name",
+  "kind": "Type",
+  "kindValues": {
+    "regular": "Regular",
+    "self_appraisal": "Self-Appraisal"
+  },
+  "scorePct": "Score",
+  "criterion": "Criterion",
+  "maxMarks": "Max Marks",
+  "score": "Score",
+  "suggested": "Suggested",
+  "apply": "Apply",
+  "remarks": "Remarks",
+  "guidance": "Guidance",
+  "totalOutOf": "{{total}} / {{max}}",
+  "scoresSaved": "Scores saved.",
+  "transitionSuccess": "Done.",
+  "transitionFailed": "That action could not be completed.",
+  "noActionsAvailable": "No actions are available for you on this evaluation right now.",
+  "status": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "returned": "Returned",
+    "manager_approved": "Approved",
+    "pmo_reviewed": "PMO Reviewed",
+    "fm_approved": "Approved"
+  },
+  "bulkEntry": {
+    "title": "My Team — Evaluations",
+    "createForDepartment": "Create for a Department",
+    "department": "Department",
+    "open": "Open"
+  },
+  "bulkCreateResult": "{{created}} created, {{skipped}} skipped.",
+  "errors": {
+    "rowVersionConflict": "This evaluation was changed elsewhere — reload and try again.",
+    "saveFailed": "Could not save scores."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "title": "التقييمات",
+  "staffNo": "الرقم الوظيفي",
+  "employeeName": "الاسم",
+  "kind": "النوع",
+  "kindValues": {
+    "regular": "تقييم عادي",
+    "self_appraisal": "تقييم ذاتي"
+  },
+  "scorePct": "الدرجة",
+  "criterion": "المعيار",
+  "maxMarks": "الدرجة القصوى",
+  "score": "الدرجة",
+  "suggested": "مقترح",
+  "apply": "تطبيق",
+  "remarks": "ملاحظات",
+  "guidance": "إرشادات",
+  "totalOutOf": "{{total}} / {{max}}",
+  "scoresSaved": "تم حفظ الدرجات.",
+  "transitionSuccess": "تم بنجاح.",
+  "transitionFailed": "تعذر إتمام هذا الإجراء.",
+  "noActionsAvailable": "لا توجد إجراءات متاحة لك على هذا التقييم حاليًا.",
+  "status": {
+    "draft": "مسودة",
+    "submitted": "مُرسل",
+    "returned": "مُعاد",
+    "manager_approved": "معتمد",
+    "pmo_reviewed": "تمت مراجعته من PMO",
+    "fm_approved": "معتمد"
+  },
+  "bulkEntry": {
+    "title": "فريقي — التقييمات",
+    "createForDepartment": "إنشاء لقسم",
+    "department": "القسم",
+    "open": "فتح"
+  },
+  "bulkCreateResult": "تم إنشاء {{created}}، وتخطي {{skipped}}.",
+  "errors": {
+    "rowVersionConflict": "تم تغيير هذا التقييم في مكان آخر — أعد التحميل وحاول مرة أخرى.",
+    "saveFailed": "تعذر حفظ الدرجات."
+  }
+}

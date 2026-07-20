@@ -22,9 +22,11 @@ def not_found(message: str = "Not found", code: str = "not_found") -> AppError:
     return AppError(404, code, message)
 
 
-def conflict(message: str = "Conflict", code: str = "conflict") -> AppError:
-    return AppError(409, code, message)
+def conflict(message: str = "Conflict", code: str = "conflict", details: Any = None) -> AppError:
+    return AppError(409, code, message, details)
 
 
-def bad_request(message: str = "Bad request", code: str = "bad_request") -> AppError:
-    return AppError(400, code, message)
+def bad_request(
+    message: str = "Bad request", code: str = "bad_request", details: Any = None
+) -> AppError:
+    return AppError(400, code, message, details)

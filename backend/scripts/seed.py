@@ -12,10 +12,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.common.enums import RoleCode
+from app.common.enums import RoleCode, TemplateVersionStatus
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.modules.auth.models import Role, User, UserRole
+from app.modules.kpi_templates.models import KpiCriterion, KpiTemplate, KpiTemplateVersion
 from app.modules.org.models import Department, Position, PositionRate
 
 SEED_DATA_DIR = Path(__file__).resolve().parent.parent / "app" / "db" / "seed_data"
@@ -70,8 +71,7 @@ def seed_admin_user(db: Session, roles_by_code: dict[str, Role]) -> None:
         db.add(user)
         db.flush()
         print(
-            f"  + created admin user {ADMIN_STAFF_NO} "
-            f"(default password: {ADMIN_DEFAULT_PASSWORD})"
+            f"  + created admin user {ADMIN_STAFF_NO} (default password: {ADMIN_DEFAULT_PASSWORD})"
         )
     else:
         print(f"  = admin user {ADMIN_STAFF_NO} already exists, leaving password untouched")
@@ -83,7 +83,6 @@ def seed_admin_user(db: Session, roles_by_code: dict[str, Role]) -> None:
             db.add(UserRole(user_id=user.id, role_id=role.id, granted_by_user_id=None))
             print(f"  + granted {code.value} to {ADMIN_STAFF_NO}")
     db.commit()
-
 
 
 # Flat rates predate the system; no real effective date is known, so they're seeded as open
@@ -146,6 +145,40 @@ def seed_positions(db: Session) -> None:
     db.commit()
 
 
+def seed_kpi_templates(db: Session) -> None:
+    """Seeds the 4 real templates pre-activated (version 1, status=active) so
+    positions can be assigned immediately. Active versions are otherwise
+    immutable (enforced by the service layer) — re-running this only updates
+    the template's own name_en/name_ar, never a version already made active."""
+    data = json.loads((SEED_DATA_DIR / "kpi_templates.json").read_text(encoding="utf-8"))
+    for row in data:
+        template = db.scalars(select(KpiTemplate).where(KpiTemplate.code == row["code"])).first()
+        if template is None:
+            template = KpiTemplate(code=row["code"], name_en=row["name_en"], name_ar=row["name_ar"])
+            db.add(template)
+            db.flush()
+            print(f"  + created template {row['code']}")
+        else:
+            template.name_en = row["name_en"]
+            template.name_ar = row["name_ar"]
+
+        has_version = db.scalars(
+            select(KpiTemplateVersion).where(KpiTemplateVersion.template_id == template.id)
+        ).first()
+        if has_version is not None:
+            continue
+
+        version = KpiTemplateVersion(
+            template_id=template.id, version_no=1, status=TemplateVersionStatus.ACTIVE.value
+        )
+        db.add(version)
+        db.flush()
+        for criterion in row["criteria"]:
+            db.add(KpiCriterion(template_version_id=version.id, **criterion))
+        print(f"  + created + activated v1 for {row['code']} ({len(row['criteria'])} criteria)")
+    db.commit()
+
+
 def seed_core() -> None:
     db = SessionLocal()
     try:
@@ -157,6 +190,8 @@ def seed_core() -> None:
         seed_departments(db)
         print("Seeding positions + flat rates...")
         seed_positions(db)
+        print("Seeding KPI templates...")
+        seed_kpi_templates(db)
         print("Core seed complete.")
     finally:
         db.close()
