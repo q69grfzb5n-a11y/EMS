@@ -137,6 +137,24 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "transfers",
+            lazy: async () => {
+              const { TransferRequestsPage } = await import(
+                "@/modules/transfers/pages/TransferRequestsPage"
+              );
+              return { Component: TransferRequestsPage };
+            },
+          },
+          {
+            path: "transfers/:id",
+            lazy: async () => {
+              const { TransferDetailPage } = await import(
+                "@/modules/transfers/pages/TransferDetailPage"
+              );
+              return { Component: TransferDetailPage };
+            },
+          },
+          {
             path: "approvals",
             lazy: async () => {
               const { ApprovalsInboxPage } = await import(

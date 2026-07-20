@@ -10,6 +10,7 @@ import app.modules.employees.models  # noqa: F401,E402
 import app.modules.evaluations.models  # noqa: F401,E402
 import app.modules.kpi_templates.models  # noqa: F401,E402
 import app.modules.org.models  # noqa: F401,E402
+import app.modules.transfers.models  # noqa: F401,E402
 from alembic import context
 from app.core.config import get_settings
 from app.db.base import Base

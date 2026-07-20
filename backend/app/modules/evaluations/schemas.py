@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -47,6 +46,10 @@ class EvaluationCreateRequest(BaseModel):
     kind: str = "regular"
 
 
+class SelfAppraisalCreateRequest(BaseModel):
+    period_id: int
+
+
 class BulkCreateRequest(BaseModel):
     department_id: int
     period_id: int
@@ -78,16 +81,3 @@ class EvaluationUpdateRequest(BaseModel):
 
 class TransitionRequest(BaseModel):
     comment: str | None = None
-
-
-class ApprovalActionOut(BaseModel):
-    id: int
-    entity_type: str
-    entity_id: int
-    action: str
-    from_status: str
-    to_status: str
-    actor_user_id: int
-    actor_role: str
-    comment: str | None
-    created_at: datetime

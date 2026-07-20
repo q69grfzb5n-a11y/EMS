@@ -6,6 +6,7 @@ import type {
   EvaluationCreateRequest,
   EvaluationOut,
   EvaluationUpdateRequest,
+  SelfAppraisalCreateRequest,
 } from "@/modules/evaluations/types";
 
 export async function listEvaluations(periodId?: number): Promise<EvaluationOut[]> {
@@ -17,6 +18,13 @@ export async function listEvaluations(periodId?: number): Promise<EvaluationOut[
 
 export async function createEvaluation(payload: EvaluationCreateRequest): Promise<EvaluationOut> {
   const { data } = await apiClient.post<EvaluationOut>("/evaluations", payload);
+  return data;
+}
+
+export async function createSelfAppraisal(
+  payload: SelfAppraisalCreateRequest,
+): Promise<EvaluationOut> {
+  const { data } = await apiClient.post<EvaluationOut>("/evaluations/self", payload);
   return data;
 }
 
@@ -47,11 +55,6 @@ export const submitEvaluation = (id: number, comment?: string) => transition(id,
 export const approveEvaluation = (id: number, comment?: string) => transition(id, "approve", comment);
 export const returnEvaluation = (id: number, comment?: string) => transition(id, "return", comment);
 export const reviewEvaluation = (id: number, comment?: string) => transition(id, "review", comment);
-
-export async function listPendingApprovals(): Promise<EvaluationOut[]> {
-  const { data } = await apiClient.get<EvaluationOut[]>("/approvals/pending");
-  return data;
-}
 
 export async function getEvaluationHistory(id: number): Promise<ApprovalActionOut[]> {
   const { data } = await apiClient.get<ApprovalActionOut[]>(`/approvals/evaluation/${id}/history`);

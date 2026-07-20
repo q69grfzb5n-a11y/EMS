@@ -10,8 +10,10 @@ import app.common.models  # noqa: F401
 import app.modules.attendance.models  # noqa: F401
 import app.modules.auth.models  # noqa: F401
 import app.modules.employees.models  # noqa: F401
+import app.modules.evaluations.models  # noqa: F401
 import app.modules.kpi_templates.models  # noqa: F401
 import app.modules.org.models  # noqa: F401
+import app.modules.transfers.models  # noqa: F401
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import get_db

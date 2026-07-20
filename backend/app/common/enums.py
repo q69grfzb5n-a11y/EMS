@@ -50,6 +50,22 @@ class EvaluationStatus(StrEnum):
     FM_APPROVED = "fm_approved"
 
 
+class TransferStatus(StrEnum):
+    """draft -> submitted -> pmo_reviewed -> fm_approved -> applied, with a return
+    loop from either review step back to `returned` (same shape as the
+    self-appraisal table in evaluations/workflow.py). `applied` is never reached
+    via a role-driven transition — it's set by transfers/service.py's lazy
+    apply-if-due pass once `effective_date` arrives, since this project has no
+    background scheduler."""
+
+    DRAFT = "draft"
+    SUBMITTED = "submitted"
+    RETURNED = "returned"
+    PMO_REVIEWED = "pmo_reviewed"
+    FM_APPROVED = "fm_approved"
+    APPLIED = "applied"
+
+
 class RoleCode(StrEnum):
     HR = "hr"
     ADMIN = "admin"

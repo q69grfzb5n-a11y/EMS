@@ -339,6 +339,28 @@ def create_evaluation(
     return get_evaluation(db, outcome.evaluation.id)
 
 
+def create_self_appraisal(db: Session, actor: User, *, period_id: int) -> Evaluation:
+    """Self-service counterpart to create_evaluation: a Key Person starts their
+    own self-appraisal directly, without going through HR/PMO bulk-create."""
+    if RoleCode.KEY_PERSON.value not in actor.role_codes:
+        raise forbidden()
+    if actor.employee_id is None:
+        raise bad_request(
+            "Your account is not linked to an employee record", code="no_employee_link"
+        )
+    employee = get_employee(db, actor.employee_id)
+    period = get_period(db, period_id)
+    outcome = _create_evaluation_internal(
+        db, actor, employee=employee, period=period, kind=EvaluationKind.SELF_APPRAISAL.value
+    )
+    if outcome.evaluation is None:
+        db.rollback()
+        assert outcome.error_code is not None
+        raise _raise_for_error_code(outcome.error_code)
+    db.commit()
+    return get_evaluation(db, outcome.evaluation.id)
+
+
 @dataclass
 class BulkCreateSummary:
     created: list[Evaluation]

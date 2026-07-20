@@ -3,13 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.common.enums import RoleCode
-from app.common.models import ApprovalAction
 from app.core.deps import CurrentUser, DbSession, require_roles
 from app.modules.auth.models import User
 from app.modules.evaluations import service
 from app.modules.evaluations.models import Evaluation, EvaluationScore
 from app.modules.evaluations.schemas import (
-    ApprovalActionOut,
     BulkCreateRequest,
     BulkCreateResponse,
     BulkCreateSkipped,
@@ -18,6 +16,7 @@ from app.modules.evaluations.schemas import (
     EvaluationOut,
     EvaluationScoreOut,
     EvaluationUpdateRequest,
+    SelfAppraisalCreateRequest,
     TransitionRequest,
 )
 from app.modules.evaluations.service import ScoreUpdateInput
@@ -25,7 +24,6 @@ from app.modules.evaluations.service import ScoreUpdateInput
 CreateWriters = Annotated[User, Depends(require_roles(RoleCode.HR, RoleCode.PMO, RoleCode.ADMIN))]
 
 evaluations_router = APIRouter(prefix="/evaluations", tags=["evaluations"])
-approvals_router = APIRouter(prefix="/approvals", tags=["evaluations"])
 
 
 def _score_to_out(score: EvaluationScore) -> EvaluationScoreOut:
@@ -69,21 +67,6 @@ def _evaluation_to_out(evaluation: Evaluation) -> EvaluationOut:
     )
 
 
-def _action_to_out(action: ApprovalAction) -> ApprovalActionOut:
-    return ApprovalActionOut(
-        id=action.id,
-        entity_type=action.entity_type,
-        entity_id=action.entity_id,
-        action=action.action,
-        from_status=action.from_status,
-        to_status=action.to_status,
-        actor_user_id=action.actor_user_id,
-        actor_role=action.actor_role,
-        comment=action.comment,
-        created_at=action.created_at,
-    )
-
-
 @evaluations_router.get("", response_model=list[EvaluationOut])
 def list_evaluations_endpoint(
     user: CurrentUser, db: DbSession, period_id: int | None = None
@@ -101,6 +84,14 @@ def create_evaluation_endpoint(
     evaluation = service.create_evaluation(
         db, actor, employee_id=payload.employee_id, period_id=payload.period_id, kind=payload.kind
     )
+    return _evaluation_to_out(evaluation)
+
+
+@evaluations_router.post("/self", response_model=EvaluationOut, status_code=201)
+def create_self_appraisal_endpoint(
+    payload: SelfAppraisalCreateRequest, actor: CurrentUser, db: DbSession
+) -> EvaluationOut:
+    evaluation = service.create_self_appraisal(db, actor, period_id=payload.period_id)
     return _evaluation_to_out(evaluation)
 
 
@@ -182,15 +173,3 @@ def review_evaluation_endpoint(
         db, actor, evaluation_id, action="review", comment=payload.comment
     )
     return _evaluation_to_out(evaluation)
-
-
-@approvals_router.get("/pending", response_model=list[EvaluationOut])
-def list_pending_endpoint(user: CurrentUser, db: DbSession) -> list[EvaluationOut]:
-    return [_evaluation_to_out(e) for e in service.list_pending_for_actor(db, user)]
-
-
-@approvals_router.get("/evaluation/{evaluation_id}/history", response_model=list[ApprovalActionOut])
-def get_evaluation_history_endpoint(
-    evaluation_id: int, _user: CurrentUser, db: DbSession
-) -> list[ApprovalActionOut]:
-    return [_action_to_out(a) for a in service.get_history(db, evaluation_id)]

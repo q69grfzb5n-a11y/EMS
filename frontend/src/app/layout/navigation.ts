@@ -24,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
     permission: "MANAGE_PERIODS",
   },
   { key: "myTeam", labelKey: "nav.myTeam", path: "/evaluations" },
+  { key: "transfers", labelKey: "nav.transfers", path: "/transfers" },
   { key: "approvals", labelKey: "nav.approvals", path: "/approvals" },
   { key: "users", labelKey: "nav.users", path: "/users", permission: "MANAGE_ROLES" },
 ];

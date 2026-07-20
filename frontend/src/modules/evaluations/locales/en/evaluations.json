@@ -34,6 +34,16 @@
     "department": "Department",
     "open": "Open"
   },
+  "selfAppraisal": {
+    "start": "Start My Self-Appraisal",
+    "created": "Self-appraisal started.",
+    "errors": {
+      "already_exists": "You already have a self-appraisal for this period.",
+      "no_template_assigned": "No KPI template is assigned to your position yet.",
+      "no_active_template_version": "The assigned KPI template has no active version.",
+      "unknown_error": "Could not start your self-appraisal."
+    }
+  },
   "bulkCreateResult": "{{created}} created, {{skipped}} skipped.",
   "errors": {
     "rowVersionConflict": "This evaluation was changed elsewhere — reload and try again.",

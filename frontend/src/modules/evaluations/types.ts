@@ -1,3 +1,7 @@
+import type { EmployeeBrief, ApprovalActionOut } from "@/shared/types/approvals";
+
+export type { EmployeeBrief, ApprovalActionOut };
+
 export type EvaluationKind = "regular" | "self_appraisal";
 export type EvaluationStatus =
   | "draft"
@@ -7,13 +11,6 @@ export type EvaluationStatus =
   | "pmo_reviewed"
   | "fm_approved";
 export type InputMode = "marks" | "scale_1_5";
-
-export interface EmployeeBrief {
-  id: number;
-  staff_no: string;
-  full_name_en: string | null;
-  full_name_ar: string;
-}
 
 export interface EvaluationScoreOut {
   criterion_id: number;
@@ -51,6 +48,10 @@ export interface EvaluationCreateRequest {
   kind?: EvaluationKind;
 }
 
+export interface SelfAppraisalCreateRequest {
+  period_id: number;
+}
+
 export interface BulkCreateRequest {
   department_id: number;
   period_id: number;
@@ -78,17 +79,4 @@ export interface EvaluationUpdateRequest {
   row_version: number;
   scores: ScoreUpdateRequest[];
   activities?: string[] | null;
-}
-
-export interface ApprovalActionOut {
-  id: number;
-  entity_type: string;
-  entity_id: number;
-  action: string;
-  from_status: string;
-  to_status: string;
-  actor_user_id: number;
-  actor_role: string;
-  comment: string | null;
-  created_at: string;
 }

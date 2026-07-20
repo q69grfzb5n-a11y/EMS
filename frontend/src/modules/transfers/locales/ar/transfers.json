@@ -1,0 +1,25 @@
+{
+  "title": "طلبات النقل",
+  "requestTransfer": "طلب نقل",
+  "employee": "الموظف",
+  "staffNo": "الرقم الوظيفي",
+  "employeeName": "الاسم",
+  "fromDepartment": "من قسم",
+  "toDepartment": "إلى قسم",
+  "effectiveDate": "تاريخ السريان",
+  "reason": "السبب",
+  "createSuccess": "تم إنشاء طلب النقل.",
+  "status": {
+    "draft": "مسودة",
+    "submitted": "مُرسل",
+    "returned": "مُعاد",
+    "pmo_reviewed": "تمت مراجعته من PMO",
+    "fm_approved": "معتمد",
+    "applied": "تم التنفيذ"
+  },
+  "errors": {
+    "same_department": "الموظف موجود بالفعل في القسم المستهدف.",
+    "employee_has_pending_transfer": "يوجد لهذا الموظف طلب نقل قيد التنفيذ بالفعل.",
+    "unknown_error": "تعذر إنشاء طلب النقل."
+  }
+}

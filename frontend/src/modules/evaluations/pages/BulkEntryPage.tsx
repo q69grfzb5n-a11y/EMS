@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Button, Form, Modal, Select, Space, Table, Typography, message } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { listPeriods } from "@/modules/attendance/api/attendanceApi";
 import {
   bulkCreateEvaluations,
+  createSelfAppraisal,
   listEvaluations,
   submitEvaluation,
 } from "@/modules/evaluations/api/evaluationsApi";
@@ -15,6 +17,7 @@ import type { EvaluationOut } from "@/modules/evaluations/types";
 import { listDepartments } from "@/modules/org/api/orgApi";
 import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
+import { ROLES, hasAnyRole } from "@/shared/auth/permissions";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
 
@@ -56,17 +59,50 @@ export function BulkEntryPage() {
     },
   });
 
+  const selfAppraisalMutation = useMutation({
+    mutationFn: () => createSelfAppraisal({ period_id: periodId as number }),
+    onSuccess: (evaluation) => {
+      void message.success(t("evaluations:selfAppraisal.created"));
+      void queryClient.invalidateQueries({ queryKey: ["evaluations"] });
+      navigate(`/evaluations/${evaluation.id}`);
+    },
+    onError: (err: unknown) => {
+      const code =
+        isAxiosError(err) && typeof err.response?.data?.error?.code === "string"
+          ? (err.response.data.error.code as string)
+          : "unknown_error";
+      void message.error(
+        t(`evaluations:selfAppraisal.errors.${code}`, {
+          defaultValue: t("evaluations:selfAppraisal.errors.unknown_error"),
+        }),
+      );
+    },
+  });
+
+  const isKeyPerson = hasAnyRole(currentUser?.roles ?? [], [ROLES.KEY_PERSON]);
+
   return (
     <div>
       <Space style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Typography.Title level={3} style={{ margin: 0 }}>
           {t("evaluations:bulkEntry.title")}
         </Typography.Title>
-        <Can permission="CREATE_EVALUATIONS">
-          <Button type="primary" disabled={!periodId} onClick={() => setBulkCreateOpen(true)}>
-            {t("evaluations:bulkEntry.createForDepartment")}
-          </Button>
-        </Can>
+        <Space>
+          {isKeyPerson && (
+            <Button
+              disabled={!periodId}
+              loading={selfAppraisalMutation.isPending}
+              onClick={() => selfAppraisalMutation.mutate()}
+            >
+              {t("evaluations:selfAppraisal.start")}
+            </Button>
+          )}
+          <Can permission="CREATE_EVALUATIONS">
+            <Button type="primary" disabled={!periodId} onClick={() => setBulkCreateOpen(true)}>
+              {t("evaluations:bulkEntry.createForDepartment")}
+            </Button>
+          </Can>
+        </Space>
       </Space>
 
       <Select

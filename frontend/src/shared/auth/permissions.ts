@@ -23,6 +23,7 @@ export const PERMISSIONS = {
   MANAGE_PERIODS: [ROLES.HR, ROLES.PMO],
   MANAGE_ATTENDANCE: [ROLES.HR],
   CREATE_EVALUATIONS: [ROLES.HR, ROLES.PMO, ROLES.ADMIN],
+  REQUEST_TRANSFERS: [ROLES.HR, ROLES.DEPT_MANAGER, ROLES.ADMIN],
 } as const satisfies Record<string, readonly RoleCode[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

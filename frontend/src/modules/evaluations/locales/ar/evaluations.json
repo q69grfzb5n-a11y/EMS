@@ -34,6 +34,16 @@
     "department": "القسم",
     "open": "فتح"
   },
+  "selfAppraisal": {
+    "start": "بدء تقييمي الذاتي",
+    "created": "تم بدء التقييم الذاتي.",
+    "errors": {
+      "already_exists": "لديك بالفعل تقييم ذاتي لهذه الفترة.",
+      "no_template_assigned": "لم يتم تعيين نموذج تقييم لوظيفتك بعد.",
+      "no_active_template_version": "نموذج التقييم المعيَّن ليس له إصدار فعّال.",
+      "unknown_error": "تعذر بدء تقييمك الذاتي."
+    }
+  },
   "bulkCreateResult": "تم إنشاء {{created}}، وتخطي {{skipped}}.",
   "errors": {
     "rowVersionConflict": "تم تغيير هذا التقييم في مكان آخر — أعد التحميل وحاول مرة أخرى.",

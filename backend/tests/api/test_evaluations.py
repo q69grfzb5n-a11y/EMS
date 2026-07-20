@@ -684,3 +684,71 @@ def test_service_get_history_matches_router(db_session: Session) -> None:
         raise AssertionError("expected not_found")
     except AppError as exc:
         assert exc.status_code == 404
+
+
+# ---- self-service self-appraisal creation (Phase 6) ----------------------
+
+
+def test_self_service_creates_own_self_appraisal(client: TestClient, db_session: Session) -> None:
+    fx = build_fixture(db_session, suffix="20")
+    key_person = make_user(db_session, "KP20", roles=["key_person"], employee_id=fx.employee.id)
+
+    resp = client.post(
+        "/api/v1/evaluations/self",
+        headers=auth_headers(client, key_person.staff_no),
+        json={"period_id": fx.period.id},
+    )
+
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["kind"] == "self_appraisal"
+    assert body["owner_user_id"] == key_person.id
+    assert body["employee"]["id"] == fx.employee.id
+
+
+def test_self_service_forbidden_without_key_person_role(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="21")
+    non_key_person = make_user(db_session, "NKP21", roles=["employee"], employee_id=fx.employee.id)
+
+    resp = client.post(
+        "/api/v1/evaluations/self",
+        headers=auth_headers(client, non_key_person.staff_no),
+        json={"period_id": fx.period.id},
+    )
+
+    assert resp.status_code == 403
+
+
+def test_self_service_requires_employee_link(client: TestClient, db_session: Session) -> None:
+    fx = build_fixture(db_session, suffix="22")
+    unlinked = make_user(db_session, "UNLINKED22", roles=["key_person"])
+
+    resp = client.post(
+        "/api/v1/evaluations/self",
+        headers=auth_headers(client, unlinked.staff_no),
+        json={"period_id": fx.period.id},
+    )
+
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "no_employee_link"
+
+
+def test_self_service_cannot_create_duplicate_self_appraisal(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="23")
+    key_person = make_user(db_session, "KP23", roles=["key_person"], employee_id=fx.employee.id)
+    kp_headers = auth_headers(client, key_person.staff_no)
+
+    first = client.post(
+        "/api/v1/evaluations/self", headers=kp_headers, json={"period_id": fx.period.id}
+    )
+    assert first.status_code == 201
+
+    second = client.post(
+        "/api/v1/evaluations/self", headers=kp_headers, json={"period_id": fx.period.id}
+    )
+    assert second.status_code == 409
+    assert second.json()["error"]["code"] == "already_exists"

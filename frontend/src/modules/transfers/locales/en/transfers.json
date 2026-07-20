@@ -1,0 +1,25 @@
+{
+  "title": "Transfer Requests",
+  "requestTransfer": "Request Transfer",
+  "employee": "Employee",
+  "staffNo": "Staff Number",
+  "employeeName": "Name",
+  "fromDepartment": "From Department",
+  "toDepartment": "To Department",
+  "effectiveDate": "Effective Date",
+  "reason": "Reason",
+  "createSuccess": "Transfer request created.",
+  "status": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "returned": "Returned",
+    "pmo_reviewed": "PMO Reviewed",
+    "fm_approved": "Approved",
+    "applied": "Applied"
+  },
+  "errors": {
+    "same_department": "Employee is already in the target department.",
+    "employee_has_pending_transfer": "This employee already has a transfer request in progress.",
+    "unknown_error": "Could not create the transfer request."
+  }
+}
