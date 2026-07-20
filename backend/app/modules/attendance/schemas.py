@@ -19,6 +19,11 @@ class IncentivePeriodCreateRequest(BaseModel):
     month: int = Field(ge=1, le=12)
 
 
+class IncentivePeriodPoolsRequest(BaseModel):
+    target_pool: Decimal
+    actual_pool: Decimal
+
+
 class RowIssueOut(BaseModel):
     row_number: int
     staff_no: str | None

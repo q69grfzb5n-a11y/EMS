@@ -14,6 +14,7 @@ from app.modules.attendance.router import router as attendance_router
 from app.modules.auth.router import router as auth_router
 from app.modules.employees.router import router as employees_router
 from app.modules.evaluations.router import evaluations_router
+from app.modules.incentives.router import router as incentives_router
 from app.modules.kpi_templates.router import positions_router as kpi_positions_router
 from app.modules.kpi_templates.router import router as kpi_templates_router
 from app.modules.org.router import router as org_router
@@ -28,6 +29,7 @@ api_router.include_router(kpi_positions_router)
 api_router.include_router(attendance_router)
 api_router.include_router(evaluations_router)
 api_router.include_router(transfers_router)
+api_router.include_router(incentives_router)
 api_router.include_router(approvals_router)
 
 

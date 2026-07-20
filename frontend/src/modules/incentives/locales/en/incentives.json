@@ -1,0 +1,63 @@
+{
+  "title": "Incentive Runs",
+  "status": {
+    "draft": "Draft",
+    "pmo_audit": "PMO Audit",
+    "fm_approval": "FM Approval",
+    "approved": "Approved"
+  },
+  "createRun": "Create Run",
+  "createSuccess": "Incentive run created.",
+  "runNo": "Run #",
+  "runTitle": "Run #{{runNo}}",
+  "formulaMode": "Formula Mode",
+  "formulaModeValues": {
+    "legacy_flat": "Legacy (flat SAR reference)",
+    "pct_of_salary": "% of Salary"
+  },
+  "lineCount": "Lines",
+  "exceptionCount": "Exceptions",
+  "exceptionsCount": "{{count}} Exceptions",
+  "totalFinalAmount": "Total (SAR)",
+  "finalAmount": "Amount (SAR)",
+  "department": "Department",
+  "excluded": "Excluded",
+  "viewLine": "View / Edit",
+  "recalculate": "Recalculate",
+  "recalculated": "Run recalculated.",
+  "deptTotals": "Totals by Department",
+  "periodLocked": "Period Locked",
+  "reason": "Reason",
+  "exceptionReasons": {
+    "inactive": "Employee is inactive",
+    "missing_evaluation": "No approved evaluation for this period",
+    "missing_attendance": "No attendance record for this period",
+    "missing_salary": "No base salary on record",
+    "missing_position_rate": "No position rate for this formula mode"
+  },
+  "overrideAmount": "Override Amount",
+  "overrideReason": "Override Reason",
+  "excludeReason": "Exclude Reason",
+  "reasonRequiredHint": "An override or exclusion requires a reason before it can be saved.",
+  "lineSaved": "Line saved.",
+  "lineSaveFailed": "Could not save this line.",
+  "breakdown": {
+    "evaluationPct": "Evaluation %",
+    "flatRefAmount": "Position Reference (flat)",
+    "baseSalaryTimesPct": "Base Salary × Position %",
+    "attendanceFactor": "Attendance Factor",
+    "targetRatio": "Target Ratio",
+    "computedAmount": "Computed Amount",
+    "overrideAmount": "Override"
+  },
+  "myIncentives": {
+    "title": "My Incentives",
+    "empty": "No approved incentive payouts yet.",
+    "amount": "{{amount}} SAR"
+  },
+  "errors": {
+    "pools_not_set": "Set the period's target and actual pool figures before creating a run.",
+    "invalid_target_pool": "Target pool cannot be zero.",
+    "unknown_error": "Could not create the incentive run."
+  }
+}

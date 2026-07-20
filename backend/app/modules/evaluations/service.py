@@ -6,7 +6,13 @@ from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.common.audit import write_audit
-from app.common.enums import EmploymentStatus, EvaluationKind, EvaluationStatus, RoleCode
+from app.common.enums import (
+    EmploymentStatus,
+    EvaluationKind,
+    EvaluationStatus,
+    PeriodStatus,
+    RoleCode,
+)
 from app.common.errors import AppError, bad_request, conflict, forbidden, not_found
 from app.common.models import ApprovalAction
 from app.common.workflow import TransitionTable, apply_transition, transition_history
@@ -36,6 +42,16 @@ def _actor_department_id(db: Session, actor: User) -> int | None:
         return None
     employee = db.get(Employee, actor.employee_id)
     return employee.department_id if employee is not None else None
+
+
+def _ensure_period_open(period: IncentivePeriod) -> None:
+    """A period locked by an approved incentive run (Phase 7) can no longer
+    have its evaluations created, scored, or transitioned — the run's line
+    items already snapshotted whatever was approved at lock time."""
+    if period.status == PeriodStatus.LOCKED.value:
+        raise conflict(
+            "This period is locked; evaluations can no longer be changed", code="period_locked"
+        )
 
 
 def _evaluation_query() -> Select[tuple[Evaluation]]:
@@ -330,6 +346,7 @@ def create_evaluation(
 ) -> Evaluation:
     employee = get_employee(db, employee_id)
     period = get_period(db, period_id)
+    _ensure_period_open(period)
     outcome = _create_evaluation_internal(db, actor, employee=employee, period=period, kind=kind)
     if outcome.evaluation is None:
         db.rollback()
@@ -350,6 +367,7 @@ def create_self_appraisal(db: Session, actor: User, *, period_id: int) -> Evalua
         )
     employee = get_employee(db, actor.employee_id)
     period = get_period(db, period_id)
+    _ensure_period_open(period)
     outcome = _create_evaluation_internal(
         db, actor, employee=employee, period=period, kind=EvaluationKind.SELF_APPRAISAL.value
     )
@@ -371,6 +389,7 @@ def bulk_create_evaluations(
     db: Session, actor: User, *, department_id: int, period_id: int, kind: str
 ) -> BulkCreateSummary:
     period = get_period(db, period_id)
+    _ensure_period_open(period)
     employees = list(
         db.scalars(
             select(Employee).where(
@@ -417,6 +436,7 @@ def update_evaluation_scores(
     activities: list[str] | None,
 ) -> Evaluation:
     evaluation = get_evaluation(db, evaluation_id)
+    _ensure_period_open(get_period(db, evaluation.period_id))
     if evaluation.status not in (EvaluationStatus.DRAFT.value, EvaluationStatus.RETURNED.value):
         raise bad_request(
             "Evaluation can only be edited while draft or returned", code="evaluation_not_editable"
@@ -482,6 +502,7 @@ def perform_transition(
     db: Session, actor: User, evaluation_id: int, *, action: str, comment: str | None = None
 ) -> Evaluation:
     evaluation = get_evaluation(db, evaluation_id)
+    _ensure_period_open(get_period(db, evaluation.period_id))
     table = _table_for_kind(evaluation.kind)
     # The owner is the other party in every transition except submit (which
     # the owner performs themselves) — good enough without a per-department

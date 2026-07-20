@@ -66,6 +66,17 @@ class TransferStatus(StrEnum):
     APPLIED = "applied"
 
 
+class IncentiveRunStatus(StrEnum):
+    """draft -> pmo_audit -> fm_approval -> approved, with a reject loop from
+    either review step back to draft (same generic engine, same shape as the
+    evaluations/transfers transition tables)."""
+
+    DRAFT = "draft"
+    PMO_AUDIT = "pmo_audit"
+    FM_APPROVAL = "fm_approval"
+    APPROVED = "approved"
+
+
 class RoleCode(StrEnum):
     HR = "hr"
     ADMIN = "admin"

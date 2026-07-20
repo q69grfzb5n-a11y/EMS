@@ -19,12 +19,14 @@ from app.modules.attendance.schemas import (
     ImportPreviewOut,
     IncentivePeriodCreateRequest,
     IncentivePeriodOut,
+    IncentivePeriodPoolsRequest,
     RowIssueOut,
     ZeroFlagOverrideRequest,
 )
 from app.modules.auth.models import User
 
 PeriodWriters = Annotated[User, Depends(require_roles(RoleCode.HR, RoleCode.PMO))]
+PoolWriters = Annotated[User, Depends(require_roles(RoleCode.PMO))]
 ImportWriters = Annotated[User, Depends(require_roles(RoleCode.HR))]
 FlagOverriders = Annotated[User, Depends(require_roles(RoleCode.HR))]
 
@@ -120,6 +122,16 @@ def unlock_period_endpoint(
     period_id: int, actor: PeriodWriters, db: DbSession
 ) -> IncentivePeriodOut:
     return _period_to_out(service.set_period_locked(db, actor, period_id, locked=False))
+
+
+@router.patch("/periods/{period_id}/pools", response_model=IncentivePeriodOut)
+def update_period_pools_endpoint(
+    period_id: int, payload: IncentivePeriodPoolsRequest, actor: PoolWriters, db: DbSession
+) -> IncentivePeriodOut:
+    period = service.update_period_pools(
+        db, actor, period_id, target_pool=payload.target_pool, actual_pool=payload.actual_pool
+    )
+    return _period_to_out(period)
 
 
 @router.post("/periods/{period_id}/imports", response_model=ImportPreviewOut | AttendanceImportOut)

@@ -1,5 +1,6 @@
 import hashlib
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import select
@@ -60,6 +61,29 @@ def get_period(db: Session, period_id: int) -> IncentivePeriod:
 
 def set_period_locked(db: Session, actor: User, period_id: int, *, locked: bool) -> IncentivePeriod:
     period = get_period(db, period_id)
+    if not locked:
+        # Deferred import: incentives depends on attendance (lower layer), so a
+        # top-level import here would be circular. This guard exists so the
+        # Phase 4 manual unlock action can't silently undo the lock a Phase 7
+        # run approval put in place.
+        from app.common.enums import IncentiveRunStatus
+        from app.modules.incentives.models import IncentiveRun
+
+        has_approved_run = (
+            db.scalars(
+                select(IncentiveRun).where(
+                    IncentiveRun.period_id == period_id,
+                    IncentiveRun.status == IncentiveRunStatus.APPROVED.value,
+                )
+            ).first()
+            is not None
+        )
+        if has_approved_run:
+            raise conflict(
+                "This period has an approved incentive run and cannot be unlocked",
+                code="period_has_approved_run",
+            )
+
     period.status = PeriodStatus.LOCKED.value if locked else PeriodStatus.OPEN.value
     write_audit(
         db,
@@ -67,6 +91,33 @@ def set_period_locked(db: Session, actor: User, period_id: int, *, locked: bool)
         action="lock_period" if locked else "unlock_period",
         entity_type="incentive_period",
         entity_id=period.id,
+    )
+    db.commit()
+    return period
+
+
+def update_period_pools(
+    db: Session, actor: User, period_id: int, *, target_pool: Decimal, actual_pool: Decimal
+) -> IncentivePeriod:
+    period = get_period(db, period_id)
+    if period.status == PeriodStatus.LOCKED.value:
+        raise conflict(
+            "This period is locked; pool figures can no longer be edited", code="period_locked"
+        )
+    if target_pool <= 0:
+        raise bad_request("Target pool must be positive", code="invalid_target_pool")
+
+    before = {"target_pool": period.target_pool, "actual_pool": period.actual_pool}
+    period.target_pool = target_pool
+    period.actual_pool = actual_pool
+    write_audit(
+        db,
+        actor_user_id=actor.id,
+        action="update_period_pools",
+        entity_type="incentive_period",
+        entity_id=period.id,
+        before={k: str(v) if v is not None else None for k, v in before.items()},
+        after={"target_pool": str(target_pool), "actual_pool": str(actual_pool)},
     )
     db.commit()
     return period

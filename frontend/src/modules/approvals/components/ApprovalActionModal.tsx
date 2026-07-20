@@ -2,7 +2,7 @@ import { Button, Form, Input, Modal } from "antd";
 import { useTranslation } from "react-i18next";
 
 interface ApprovalActionModalProps {
-  action: "submit" | "approve" | "return" | "review";
+  action: string;
   open: boolean;
   loading: boolean;
   requireComment?: boolean;

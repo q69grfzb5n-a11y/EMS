@@ -6,6 +6,15 @@
   "month": "Month",
   "lock": "Lock Period",
   "unlock": "Unlock Period",
+  "pools": {
+    "title": "Incentive Pool",
+    "target": "Target Pool (SAR)",
+    "actual": "Actual Pool (SAR)",
+    "ratio": "Ratio",
+    "notSet": "Not set — required before an incentive run can be created.",
+    "edit": "Edit Pools",
+    "saved": "Pool figures saved."
+  },
   "records": "Records",
   "importHistory": "Import History",
   "filename": "File",

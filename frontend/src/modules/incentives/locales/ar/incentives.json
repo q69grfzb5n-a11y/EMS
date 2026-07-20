@@ -1,0 +1,63 @@
+{
+  "title": "دورات الحوافز",
+  "status": {
+    "draft": "مسودة",
+    "pmo_audit": "تدقيق PMO",
+    "fm_approval": "اعتماد مدير المصنع",
+    "approved": "معتمدة"
+  },
+  "createRun": "إنشاء دورة",
+  "createSuccess": "تم إنشاء دورة الحوافز.",
+  "runNo": "رقم الدورة",
+  "runTitle": "الدورة رقم {{runNo}}",
+  "formulaMode": "نمط الصيغة",
+  "formulaModeValues": {
+    "legacy_flat": "النمط القديم (مرجع ثابت بالريال)",
+    "pct_of_salary": "نسبة من الراتب"
+  },
+  "lineCount": "عدد الأسطر",
+  "exceptionCount": "الاستثناءات",
+  "exceptionsCount": "{{count}} استثناء",
+  "totalFinalAmount": "الإجمالي (ر.س)",
+  "finalAmount": "المبلغ (ر.س)",
+  "department": "القسم",
+  "excluded": "مستبعد",
+  "viewLine": "عرض / تعديل",
+  "recalculate": "إعادة الحساب",
+  "recalculated": "تمت إعادة حساب الدورة.",
+  "deptTotals": "الإجماليات حسب القسم",
+  "periodLocked": "الفترة مقفلة",
+  "reason": "السبب",
+  "exceptionReasons": {
+    "inactive": "الموظف غير نشط",
+    "missing_evaluation": "لا يوجد تقييم معتمد لهذه الفترة",
+    "missing_attendance": "لا يوجد سجل حضور لهذه الفترة",
+    "missing_salary": "لا يوجد راتب أساسي مسجل",
+    "missing_position_rate": "لا يوجد معدل وظيفة لهذا النمط"
+  },
+  "overrideAmount": "مبلغ التجاوز",
+  "overrideReason": "سبب التجاوز",
+  "excludeReason": "سبب الاستبعاد",
+  "reasonRequiredHint": "يتطلب التجاوز أو الاستبعاد سببًا قبل الحفظ.",
+  "lineSaved": "تم حفظ السطر.",
+  "lineSaveFailed": "تعذر حفظ هذا السطر.",
+  "breakdown": {
+    "evaluationPct": "نسبة التقييم",
+    "flatRefAmount": "مرجع الوظيفة (ثابت)",
+    "baseSalaryTimesPct": "الراتب الأساسي × نسبة الوظيفة",
+    "attendanceFactor": "عامل الحضور",
+    "targetRatio": "نسبة الهدف",
+    "computedAmount": "المبلغ المحسوب",
+    "overrideAmount": "التجاوز"
+  },
+  "myIncentives": {
+    "title": "حوافزي",
+    "empty": "لا توجد حوافز معتمدة بعد.",
+    "amount": "{{amount}} ر.س"
+  },
+  "errors": {
+    "pools_not_set": "حدد أرقام الوعاء المستهدف والفعلي للفترة قبل إنشاء دورة.",
+    "invalid_target_pool": "لا يمكن أن يكون الوعاء المستهدف صفرًا.",
+    "unknown_error": "تعذر إنشاء دورة الحوافز."
+  }
+}

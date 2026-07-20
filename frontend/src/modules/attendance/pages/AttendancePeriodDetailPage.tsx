@@ -2,6 +2,11 @@ import { useState } from "react";
 import {
   Alert,
   Button,
+  Card,
+  Descriptions,
+  Form,
+  InputNumber,
+  Modal,
   Space,
   Table,
   Tabs,
@@ -21,6 +26,7 @@ import {
   listRecords,
   lockPeriod,
   unlockPeriod,
+  updatePeriodPools,
   uploadAttendanceFile,
 } from "@/modules/attendance/api/attendanceApi";
 import type {
@@ -102,6 +108,13 @@ export function AttendancePeriodDetailPage() {
           </Can>
         </Space>
       </Space>
+
+      <PoolsCard
+        periodId={periodId}
+        targetPool={period.target_pool}
+        actualPool={period.actual_pool}
+        locked={isLocked}
+      />
 
       <Can permission="MANAGE_ATTENDANCE">
         <UploadWizard periodId={periodId} disabled={isLocked} onCommitted={invalidateAfterCommit} />
@@ -187,6 +200,112 @@ export function AttendancePeriodDetailPage() {
         ]}
       />
     </div>
+  );
+}
+
+function PoolsCard({
+  periodId,
+  targetPool,
+  actualPool,
+  locked,
+}: {
+  periodId: number;
+  targetPool: string | null;
+  actualPool: string | null;
+  locked: boolean;
+}) {
+  const { t } = useTranslation(["common", "attendance"]);
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (values: { target_pool: number; actual_pool: number }) =>
+      updatePeriodPools(periodId, {
+        target_pool: String(values.target_pool),
+        actual_pool: String(values.actual_pool),
+      }),
+    onSuccess: () => {
+      void message.success(t("attendance:pools.saved"));
+      setEditing(false);
+      void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId] });
+    },
+  });
+
+  const ratio =
+    targetPool && actualPool && Number(targetPool) !== 0
+      ? (Number(actualPool) / Number(targetPool)).toFixed(4)
+      : null;
+
+  return (
+    <Card
+      size="small"
+      title={t("attendance:pools.title")}
+      style={{ marginBottom: 16 }}
+      extra={
+        <Can permission="MANAGE_POOLS">
+          {!locked && (
+            <Button size="small" onClick={() => setEditing(true)}>
+              {t("attendance:pools.edit")}
+            </Button>
+          )}
+        </Can>
+      }
+    >
+      {targetPool && actualPool ? (
+        <Descriptions size="small" column={3}>
+          <Descriptions.Item label={t("attendance:pools.target")}>
+            <Ltr>{targetPool}</Ltr>
+          </Descriptions.Item>
+          <Descriptions.Item label={t("attendance:pools.actual")}>
+            <Ltr>{actualPool}</Ltr>
+          </Descriptions.Item>
+          <Descriptions.Item label={t("attendance:pools.ratio")}>
+            <Ltr>{ratio}</Ltr>
+          </Descriptions.Item>
+        </Descriptions>
+      ) : (
+        <Alert type="warning" showIcon message={t("attendance:pools.notSet")} />
+      )}
+
+      <Modal
+        title={t("attendance:pools.edit")}
+        open={editing}
+        onCancel={() => setEditing(false)}
+        footer={null}
+        destroyOnHidden
+      >
+        <Form
+          layout="vertical"
+          initialValues={{
+            target_pool: targetPool ? Number(targetPool) : undefined,
+            actual_pool: actualPool ? Number(actualPool) : undefined,
+          }}
+          onFinish={(values: { target_pool: number; actual_pool: number }) =>
+            mutation.mutate(values)
+          }
+        >
+          <Form.Item
+            name="target_pool"
+            label={t("attendance:pools.target")}
+            rules={[{ required: true }]}
+          >
+            <InputNumber style={{ width: "100%" }} min={0} />
+          </Form.Item>
+          <Form.Item
+            name="actual_pool"
+            label={t("attendance:pools.actual")}
+            rules={[{ required: true }]}
+          >
+            <InputNumber style={{ width: "100%" }} min={0} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={mutation.isPending} block>
+              {t("common:common.save")}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Card>
   );
 }
 

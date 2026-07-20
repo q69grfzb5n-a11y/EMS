@@ -164,6 +164,33 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: "incentives",
+            lazy: async () => {
+              const { IncentiveRunsPage } = await import(
+                "@/modules/incentives/pages/IncentiveRunsPage"
+              );
+              return { Component: IncentiveRunsPage };
+            },
+          },
+          {
+            path: "incentives/:id",
+            lazy: async () => {
+              const { IncentiveRunDetailPage } = await import(
+                "@/modules/incentives/pages/IncentiveRunDetailPage"
+              );
+              return { Component: IncentiveRunDetailPage };
+            },
+          },
+          {
+            path: "my-incentives",
+            lazy: async () => {
+              const { MyIncentivesPage } = await import(
+                "@/modules/incentives/pages/MyIncentivesPage"
+              );
+              return { Component: MyIncentivesPage };
+            },
+          },
+          {
             element: <RequirePermission permission="MANAGE_ROLES" />,
             children: [
               {

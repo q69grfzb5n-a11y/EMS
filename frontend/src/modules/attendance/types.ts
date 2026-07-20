@@ -16,6 +16,11 @@ export interface IncentivePeriodCreateRequest {
   month: number;
 }
 
+export interface IncentivePeriodPoolsRequest {
+  target_pool: string;
+  actual_pool: string;
+}
+
 export interface RowIssueOut {
   row_number: number;
   staff_no: string | null;

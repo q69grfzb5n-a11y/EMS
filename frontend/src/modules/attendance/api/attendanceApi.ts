@@ -6,6 +6,7 @@ import type {
   ImportPreviewOut,
   IncentivePeriodCreateRequest,
   IncentivePeriodOut,
+  IncentivePeriodPoolsRequest,
 } from "@/modules/attendance/types";
 
 export async function listPeriods(): Promise<IncentivePeriodOut[]> {
@@ -35,6 +36,17 @@ export async function lockPeriod(periodId: number): Promise<IncentivePeriodOut> 
 export async function unlockPeriod(periodId: number): Promise<IncentivePeriodOut> {
   const { data } = await apiClient.post<IncentivePeriodOut>(
     `/attendance/periods/${periodId}/unlock`,
+  );
+  return data;
+}
+
+export async function updatePeriodPools(
+  periodId: number,
+  payload: IncentivePeriodPoolsRequest,
+): Promise<IncentivePeriodOut> {
+  const { data } = await apiClient.patch<IncentivePeriodOut>(
+    `/attendance/periods/${periodId}/pools`,
+    payload,
   );
   return data;
 }

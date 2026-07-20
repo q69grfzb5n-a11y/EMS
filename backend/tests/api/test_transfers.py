@@ -75,10 +75,16 @@ def build_fixture(db_session: Session, *, suffix: str) -> Fixture:
     db_session.flush()
 
     mgr_a_employee = Employee(
-        staff_no=f"TMGRA{suffix}", full_name_ar="مدير أ", department_id=dept_a.id, position_id=position.id
+        staff_no=f"TMGRA{suffix}",
+        full_name_ar="مدير أ",
+        department_id=dept_a.id,
+        position_id=position.id,
     )
     mgr_b_employee = Employee(
-        staff_no=f"TMGRB{suffix}", full_name_ar="مدير ب", department_id=dept_b.id, position_id=position.id
+        staff_no=f"TMGRB{suffix}",
+        full_name_ar="مدير ب",
+        department_id=dept_b.id,
+        position_id=position.id,
     )
     db_session.add_all([mgr_a_employee, mgr_b_employee])
     db_session.flush()
@@ -169,7 +175,9 @@ def test_dept_manager_can_request_for_own_department_only(
 ) -> None:
     fx = build_fixture(db_session, suffix="4")
 
-    own_dept = create_transfer(client, fx, requester=fx.dept_manager_a, effective_date=date(2026, 8, 1))
+    own_dept = create_transfer(
+        client, fx, requester=fx.dept_manager_a, effective_date=date(2026, 8, 1)
+    )
     assert own_dept.status_code == 201
 
     fx2 = build_fixture(db_session, suffix="5")
@@ -230,7 +238,9 @@ def test_full_workflow_applies_immediately_when_effective_date_has_arrived(
     assert employee.department_id == fx.dept_b.id
 
 
-def test_future_effective_date_not_applied_until_due(client: TestClient, db_session: Session) -> None:
+def test_future_effective_date_not_applied_until_due(
+    client: TestClient, db_session: Session
+) -> None:
     fx = build_fixture(db_session, suffix="8")
     hr_headers = auth_headers(client, fx.hr.staff_no)
     pmo_headers = auth_headers(client, fx.pmo.staff_no)
@@ -312,7 +322,9 @@ def test_pmo_action_forbidden_for_dept_manager(client: TestClient, db_session: S
     assert resp.status_code == 403
 
 
-def test_approve_before_review_is_invalid_transition(client: TestClient, db_session: Session) -> None:
+def test_approve_before_review_is_invalid_transition(
+    client: TestClient, db_session: Session
+) -> None:
     fx = build_fixture(db_session, suffix="11")
     hr_headers = auth_headers(client, fx.hr.staff_no)
     created = create_transfer(client, fx, requester=fx.hr, effective_date=date(2026, 8, 1)).json()
@@ -330,7 +342,9 @@ def test_approve_before_review_is_invalid_transition(client: TestClient, db_sess
 # ---- view scoping -----------------------------------------------------------
 
 
-def test_unrelated_dept_manager_cannot_view_transfer(client: TestClient, db_session: Session) -> None:
+def test_unrelated_dept_manager_cannot_view_transfer(
+    client: TestClient, db_session: Session
+) -> None:
     fx = build_fixture(db_session, suffix="12")
     # a manager whose department is neither the from- nor to-department of this
     # transfer (dept_manager_b is the *destination* manager, which is legitimately
@@ -350,7 +364,9 @@ def test_unrelated_dept_manager_cannot_view_transfer(client: TestClient, db_sess
     assert not any(t["id"] == created["id"] for t in listed.json())
 
 
-def test_destination_dept_manager_can_view_transfer(client: TestClient, db_session: Session) -> None:
+def test_destination_dept_manager_can_view_transfer(
+    client: TestClient, db_session: Session
+) -> None:
     fx = build_fixture(db_session, suffix="13")
     created = create_transfer(client, fx, requester=fx.hr, effective_date=date(2026, 8, 1)).json()
 

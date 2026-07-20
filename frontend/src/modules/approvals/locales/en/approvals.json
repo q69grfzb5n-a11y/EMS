@@ -11,7 +11,10 @@
     "submit": "Submit",
     "approve": "Approve",
     "return": "Return",
-    "review": "Mark Reviewed"
+    "review": "Mark Reviewed",
+    "submit_audit": "Submit for Audit",
+    "complete_audit": "Complete Audit",
+    "reject": "Reject"
   },
   "roles": {
     "hr": "HR",
