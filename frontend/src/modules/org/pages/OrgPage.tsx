@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { Button, Form, Input, InputNumber, Modal, Space, Switch, Table, Tabs, Tag, Typography } from "antd";
+import { Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tabs, Tag, Typography } from "antd";
 import { DatePicker } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 
+import {
+  createPositionAssignment,
+  listPositionAssignments,
+  listTemplates,
+} from "@/modules/kpi-templates/api/kpiTemplatesApi";
 import {
   createDepartment,
   createPosition,
@@ -16,6 +21,7 @@ import {
   patchPosition,
 } from "@/modules/org/api/orgApi";
 import type { DepartmentOut, PositionOut } from "@/modules/org/types";
+import { Can } from "@/shared/auth/Can";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
 import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
@@ -162,6 +168,7 @@ function PositionsTab() {
   const [editing, setEditing] = useState<PositionOut | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [ratesFor, setRatesFor] = useState<PositionOut | null>(null);
+  const [kpiTemplateFor, setKpiTemplateFor] = useState<PositionOut | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["org", "positions"] });
 
@@ -234,6 +241,9 @@ function PositionsTab() {
                 <Button size="small" onClick={() => setRatesFor(position)}>
                   {t("org:positions.rates")}
                 </Button>
+                <Button size="small" onClick={() => setKpiTemplateFor(position)}>
+                  {t("org:positions.kpiTemplate")}
+                </Button>
               </Space>
             ),
           },
@@ -291,6 +301,9 @@ function PositionsTab() {
       )}
 
       {ratesFor && <PositionRatesModal position={ratesFor} onClose={() => setRatesFor(null)} />}
+      {kpiTemplateFor && (
+        <PositionKpiTemplateModal position={kpiTemplateFor} onClose={() => setKpiTemplateFor(null)} />
+      )}
     </div>
   );
 }
@@ -384,6 +397,113 @@ function PositionRatesModal({ position, onClose }: { position: PositionOut; onCl
           <Typography.Text type="danger">{t("org:rates.overlapError")}</Typography.Text>
         )}
       </Form>
+    </Modal>
+  );
+}
+
+function PositionKpiTemplateModal({
+  position,
+  onClose,
+}: {
+  position: PositionOut;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation(["common", "org", "kpiTemplates"]);
+  const localized = useLocalizedField();
+  const queryClient = useQueryClient();
+  const assignmentsQuery = useQuery({
+    queryKey: ["org", "positions", position.id, "kpi-template-assignments"],
+    queryFn: () => listPositionAssignments(position.id),
+  });
+  const templatesQuery = useQuery({ queryKey: ["kpi-templates"], queryFn: listTemplates });
+  const templateName = (templateId: number) => {
+    const tpl = templatesQuery.data?.find((t2) => t2.id === templateId);
+    return tpl ? `${tpl.code} — ${localized(tpl.name_en, tpl.name_ar)}` : templateId;
+  };
+
+  const createMutation = useMutation({
+    mutationFn: (payload: { template_id: number; effective_from: string; effective_to?: string }) =>
+      createPositionAssignment(position.id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["org", "positions", position.id, "kpi-template-assignments"],
+      });
+    },
+  });
+
+  return (
+    <Modal
+      title={`${position.code} — ${t("org:positions.kpiTemplate")}`}
+      open
+      onCancel={onClose}
+      footer={null}
+      width={640}
+    >
+      <Table
+        size="small"
+        rowKey="id"
+        loading={assignmentsQuery.isLoading}
+        dataSource={assignmentsQuery.data ?? []}
+        pagination={false}
+        columns={[
+          {
+            title: t("kpiTemplates:title"),
+            key: "template",
+            render: (_: unknown, a: { template_id: number }) => templateName(a.template_id),
+          },
+          { title: t("org:rates.from"), dataIndex: "effective_from", render: (v: string) => <Ltr>{v}</Ltr> },
+          {
+            title: t("org:rates.to"),
+            dataIndex: "effective_to",
+            render: (v: string | null) => <Ltr>{v ?? t("org:rates.openEnded")}</Ltr>,
+          },
+        ]}
+        style={{ marginBottom: 24 }}
+      />
+
+      <Can permission="ASSIGN_KPI_TEMPLATES">
+        <Typography.Title level={5}>{t("org:positions.assignKpiTemplate")}</Typography.Title>
+        <Form
+          layout="vertical"
+          onFinish={(values: {
+            template_id: number;
+            effective_from: dayjs.Dayjs;
+            effective_to?: dayjs.Dayjs;
+          }) =>
+            createMutation.mutate({
+              template_id: values.template_id,
+              effective_from: values.effective_from.format("YYYY-MM-DD"),
+              effective_to: values.effective_to ? values.effective_to.format("YYYY-MM-DD") : undefined,
+            })
+          }
+        >
+          <Space wrap align="start">
+            <Form.Item name="template_id" label={t("kpiTemplates:title")} rules={[{ required: true }]}>
+              <Select
+                style={{ minWidth: 220 }}
+                options={(templatesQuery.data ?? []).map((tpl) => ({
+                  value: tpl.id,
+                  label: `${tpl.code} — ${localized(tpl.name_en, tpl.name_ar)}`,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item name="effective_from" label={t("org:rates.from")} rules={[{ required: true }]}>
+              <DatePicker />
+            </Form.Item>
+            <Form.Item name="effective_to" label={t("org:rates.to")}>
+              <DatePicker />
+            </Form.Item>
+          </Space>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
+              {t("common:common.create")}
+            </Button>
+          </Form.Item>
+          {createMutation.isError && (
+            <Typography.Text type="danger">{t("org:positions.assignmentOverlapError")}</Typography.Text>
+          )}
+        </Form>
+      </Can>
     </Modal>
   );
 }

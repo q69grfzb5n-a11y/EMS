@@ -1,0 +1,60 @@
+{
+  "title": "الحضور",
+  "createPeriod": "فترة جديدة",
+  "period": "الفترة",
+  "year": "السنة",
+  "month": "الشهر",
+  "lock": "قفل الفترة",
+  "unlock": "فتح الفترة",
+  "records": "السجلات",
+  "importHistory": "سجل الاستيراد",
+  "filename": "الملف",
+  "rowCount": "عدد الصفوف",
+  "uploadedAt": "تاريخ الرفع",
+  "staffNo": "الرقم الوظيفي",
+  "employeeName": "الاسم",
+  "present": "حاضر",
+  "offDays": "أيام إجازة أسبوعية",
+  "absent": "غياب",
+  "leave": "إجازة",
+  "publicHoliday": "عطلة رسمية",
+  "overTime": "عمل إضافي",
+  "deductMin": "دقائق الخصم",
+  "periodStatus": {
+    "open": "مفتوحة",
+    "locked": "مقفلة"
+  },
+  "importStatus": {
+    "active": "نشط",
+    "superseded": "مستبدل"
+  },
+  "wizard": {
+    "title": "رفع الحضور الشهري",
+    "periodLocked": "هذه الفترة مقفلة — لا يمكن استيراد الحضور بعد الآن.",
+    "dropHint": "اسحب ملف تصدير الحضور من أوراكل هنا، أو انقر للاختيار (.xlsx)",
+    "preview": "معاينة",
+    "commit": "اعتماد",
+    "committed": "تم استيراد الحضور بنجاح.",
+    "commitFailed": "تعذر استيراد الملف.",
+    "summary": "{{total}} صف — {{matched}} مطابق، {{unmatched}} غير مطابق",
+    "row": "الصف",
+    "severity": "الخطورة",
+    "severityValues": {
+      "error": "خطأ",
+      "warning": "تحذير"
+    },
+    "message": "الرسالة"
+  },
+  "zeroFlags": {
+    "title": "أعلام صفر الحضور",
+    "description": "الموظفون الذين تجاوز مجموع إجازاتهم وغيابهم المتراكم حد العقد المسموح به (45 يومًا لعقد سنة واحدة، 90 يومًا لعقد سنتين) خلال نافذة 6 أشهر.",
+    "employeeId": "رقم الموظف",
+    "window": "نافذة الفترة",
+    "totalDays": "الأيام / الحد المسموح",
+    "activeTag": "نشط",
+    "overriddenTag": "تم تجاوزه",
+    "override": "تجاوز",
+    "reason": "السبب",
+    "overridden": "تم تجاوز العلم."
+  }
+}

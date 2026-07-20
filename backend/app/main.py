@@ -9,14 +9,23 @@ from sqlalchemy import text
 
 from app.common.errors import AppError
 from app.db.session import SessionLocal
+from app.modules.attendance.router import router as attendance_router
 from app.modules.auth.router import router as auth_router
 from app.modules.employees.router import router as employees_router
+from app.modules.evaluations.router import approvals_router, evaluations_router
+from app.modules.kpi_templates.router import positions_router as kpi_positions_router
+from app.modules.kpi_templates.router import router as kpi_templates_router
 from app.modules.org.router import router as org_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth_router)
 api_router.include_router(org_router)
 api_router.include_router(employees_router)
+api_router.include_router(kpi_templates_router)
+api_router.include_router(kpi_positions_router)
+api_router.include_router(attendance_router)
+api_router.include_router(evaluations_router)
+api_router.include_router(approvals_router)
 
 
 def _sanitize_errors(errors: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:

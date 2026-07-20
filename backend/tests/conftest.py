@@ -7,8 +7,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 import app.common.models  # noqa: F401
+import app.modules.attendance.models  # noqa: F401
 import app.modules.auth.models  # noqa: F401
 import app.modules.employees.models  # noqa: F401
+import app.modules.kpi_templates.models  # noqa: F401
 import app.modules.org.models  # noqa: F401
 from app.core.config import get_settings
 from app.db.base import Base
@@ -74,6 +76,26 @@ def engine() -> Generator[Engine, None, None]:
                         ADD CONSTRAINT ck_employee_salaries_no_overlap
                         EXCLUDE USING gist (
                             employee_id WITH =,
+                            daterange(effective_from, effective_to, '[)') WITH &&
+                        );
+                    END IF;
+                END $$;
+                """
+            )
+        )
+        conn.execute(
+            text(
+                """
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint
+                        WHERE conname = 'ck_kpi_template_assignments_no_overlap'
+                    ) THEN
+                        ALTER TABLE kpi_template_assignments
+                        ADD CONSTRAINT ck_kpi_template_assignments_no_overlap
+                        EXCLUDE USING gist (
+                            position_id WITH =,
                             daterange(effective_from, effective_to, '[)') WITH &&
                         );
                     END IF;

@@ -66,6 +66,86 @@ export const router = createBrowserRouter([
             ],
           },
           {
+            element: <RequirePermission permission="MANAGE_KPI_TEMPLATES" />,
+            children: [
+              {
+                path: "kpi-templates",
+                lazy: async () => {
+                  const { KpiTemplatesListPage } = await import(
+                    "@/modules/kpi-templates/pages/KpiTemplatesListPage"
+                  );
+                  return { Component: KpiTemplatesListPage };
+                },
+              },
+              {
+                path: "kpi-templates/:id",
+                lazy: async () => {
+                  const { KpiTemplateDetailPage } = await import(
+                    "@/modules/kpi-templates/pages/KpiTemplateDetailPage"
+                  );
+                  return { Component: KpiTemplateDetailPage };
+                },
+              },
+            ],
+          },
+          {
+            element: <RequirePermission permission="MANAGE_PERIODS" />,
+            children: [
+              {
+                path: "attendance",
+                lazy: async () => {
+                  const { AttendancePeriodsPage } = await import(
+                    "@/modules/attendance/pages/AttendancePeriodsPage"
+                  );
+                  return { Component: AttendancePeriodsPage };
+                },
+              },
+              {
+                path: "attendance/zero-flags",
+                lazy: async () => {
+                  const { ZeroFlagsPage } = await import(
+                    "@/modules/attendance/pages/ZeroFlagsPage"
+                  );
+                  return { Component: ZeroFlagsPage };
+                },
+              },
+              {
+                path: "attendance/:id",
+                lazy: async () => {
+                  const { AttendancePeriodDetailPage } = await import(
+                    "@/modules/attendance/pages/AttendancePeriodDetailPage"
+                  );
+                  return { Component: AttendancePeriodDetailPage };
+                },
+              },
+            ],
+          },
+          {
+            path: "evaluations",
+            lazy: async () => {
+              const { BulkEntryPage } = await import("@/modules/evaluations/pages/BulkEntryPage");
+              return { Component: BulkEntryPage };
+            },
+          },
+          {
+            path: "evaluations/:id",
+            lazy: async () => {
+              const { EvaluationDetailPage } = await import(
+                "@/modules/evaluations/pages/EvaluationDetailPage"
+              );
+              return { Component: EvaluationDetailPage };
+            },
+          },
+          {
+            path: "approvals",
+            lazy: async () => {
+              const { ApprovalsInboxPage } = await import(
+                "@/modules/approvals/pages/ApprovalsInboxPage"
+              );
+              return { Component: ApprovalsInboxPage };
+            },
+          },
+          {
             element: <RequirePermission permission="MANAGE_ROLES" />,
             children: [
               {

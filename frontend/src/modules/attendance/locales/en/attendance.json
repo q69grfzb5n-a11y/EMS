@@ -1,0 +1,60 @@
+{
+  "title": "Attendance",
+  "createPeriod": "New Period",
+  "period": "Period",
+  "year": "Year",
+  "month": "Month",
+  "lock": "Lock Period",
+  "unlock": "Unlock Period",
+  "records": "Records",
+  "importHistory": "Import History",
+  "filename": "File",
+  "rowCount": "Rows",
+  "uploadedAt": "Uploaded At",
+  "staffNo": "Staff Number",
+  "employeeName": "Name",
+  "present": "Present",
+  "offDays": "Off Days",
+  "absent": "Absent",
+  "leave": "Leave",
+  "publicHoliday": "Public Holiday",
+  "overTime": "Over Time",
+  "deductMin": "Deduct Min",
+  "periodStatus": {
+    "open": "Open",
+    "locked": "Locked"
+  },
+  "importStatus": {
+    "active": "Active",
+    "superseded": "Superseded"
+  },
+  "wizard": {
+    "title": "Upload Monthly Attendance",
+    "periodLocked": "This period is locked — attendance can no longer be imported.",
+    "dropHint": "Drag the Oracle attendance export here, or click to browse (.xlsx)",
+    "preview": "Preview",
+    "commit": "Commit",
+    "committed": "Attendance imported successfully.",
+    "commitFailed": "The file could not be imported.",
+    "summary": "{{total}} rows — {{matched}} matched, {{unmatched}} unmatched",
+    "row": "Row",
+    "severity": "Severity",
+    "severityValues": {
+      "error": "Error",
+      "warning": "Warning"
+    },
+    "message": "Message"
+  },
+  "zeroFlags": {
+    "title": "Zero-Attendance Flags",
+    "description": "Employees whose rolling leave + absence exceeded their contract allowance (45 days for a 1-year contract, 90 days for a 2-year contract) over a 6-month window.",
+    "employeeId": "Employee ID",
+    "window": "Period Window",
+    "totalDays": "Days / Allowance",
+    "activeTag": "Active",
+    "overriddenTag": "Overridden",
+    "override": "Override",
+    "reason": "Reason",
+    "overridden": "Flag overridden."
+  }
+}

@@ -16,7 +16,10 @@
     "create": "New Position",
     "currentRate": "Current Rate",
     "noRate": "No rate set",
-    "rates": "Rate History"
+    "rates": "Rate History",
+    "kpiTemplate": "KPI Template",
+    "assignKpiTemplate": "Assign a KPI Template",
+    "assignmentOverlapError": "This date range overlaps an existing KPI template assignment."
   },
   "rates": {
     "from": "Effective From",

@@ -1,0 +1,279 @@
+[
+  {
+    "code": "SKILLED",
+    "name_en": "Skilled Personnel",
+    "name_ar": "العمالة الماهرة",
+    "criteria": [
+      {
+        "name_en": "Worked Beyond Duty Hours",
+        "name_ar": "العمل بعد ساعات الدوام الرسمية",
+        "guidance_en": "1 point per 3 overtime hours worked.",
+        "guidance_ar": "نقطة واحدة لكل 3 ساعات عمل إضافي.",
+        "max_marks": 30,
+        "input_mode": "marks",
+        "allow_negative": false,
+        "auto_source": "overtime_hours",
+        "auto_params": {"unit_hours": 3, "points_per_unit": 1},
+        "sort_order": 1
+      },
+      {
+        "name_en": "Production Efficiency",
+        "name_ar": "كفاءة الإنتاج",
+        "max_marks": 20,
+        "input_mode": "marks",
+        "sort_order": 2
+      },
+      {
+        "name_en": "Work Quality",
+        "name_ar": "جودة العمل",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 3
+      },
+      {
+        "name_en": "Safety - PPE",
+        "name_ar": "السلامة - معدات الحماية الشخصية",
+        "guidance_en": "-2 points per PPE violation.",
+        "guidance_ar": "خصم نقطتين عن كل مخالفة لمعدات الحماية الشخصية.",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "sort_order": 4
+      },
+      {
+        "name_en": "Teamwork & Skill Development",
+        "name_ar": "العمل الجماعي وتطوير المهارات",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 5
+      },
+      {
+        "name_en": "Hand Tools & Equipment Handling",
+        "name_ar": "الأدوات اليدوية والتعامل مع المعدات",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 6
+      },
+      {
+        "name_en": "Attendance",
+        "name_ar": "الحضور والانضباط",
+        "guidance_en": "-5 points per absence day; score forced to zero if leave + absence exceeds the allowance over a rolling 6 months (45 days for a 1-year contract, 90 days for a 2-year contract).",
+        "guidance_ar": "خصم 5 نقاط عن كل يوم غياب؛ تُصفَّر الدرجة إذا تجاوز مجموع الإجازات والغياب الحد المسموح خلال 6 أشهر متتالية (45 يومًا لعقد سنة واحدة، 90 يومًا لعقد سنتين).",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "auto_source": "absence_penalty",
+        "auto_params": {"penalty_per_absence": 5},
+        "sort_order": 7
+      }
+    ]
+  },
+  {
+    "code": "NON_SKILLED",
+    "name_en": "Non-Skilled Personnel",
+    "name_ar": "العمالة غير الماهرة",
+    "criteria": [
+      {
+        "name_en": "Worked Beyond Duty Hours",
+        "name_ar": "العمل بعد ساعات الدوام الرسمية",
+        "guidance_en": "1 point per 3 overtime hours worked.",
+        "guidance_ar": "نقطة واحدة لكل 3 ساعات عمل إضافي.",
+        "max_marks": 30,
+        "input_mode": "marks",
+        "allow_negative": false,
+        "auto_source": "overtime_hours",
+        "auto_params": {"unit_hours": 3, "points_per_unit": 1},
+        "sort_order": 1
+      },
+      {
+        "name_en": "Production Efficiency",
+        "name_ar": "كفاءة الإنتاج",
+        "max_marks": 20,
+        "input_mode": "marks",
+        "sort_order": 2
+      },
+      {
+        "name_en": "Work Quality",
+        "name_ar": "جودة العمل",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 3
+      },
+      {
+        "name_en": "Safety - PPE",
+        "name_ar": "السلامة - معدات الحماية الشخصية",
+        "guidance_en": "-2 points per PPE violation.",
+        "guidance_ar": "خصم نقطتين عن كل مخالفة لمعدات الحماية الشخصية.",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "sort_order": 4
+      },
+      {
+        "name_en": "Skill Development",
+        "name_ar": "تطوير المهارات",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 5
+      },
+      {
+        "name_en": "Teamwork",
+        "name_ar": "العمل الجماعي",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 6
+      },
+      {
+        "name_en": "Attendance",
+        "name_ar": "الحضور والانضباط",
+        "guidance_en": "-5 points per absence day; score forced to zero if leave + absence exceeds the allowance over a rolling 6 months (45 days for a 1-year contract, 90 days for a 2-year contract).",
+        "guidance_ar": "خصم 5 نقاط عن كل يوم غياب؛ تُصفَّر الدرجة إذا تجاوز مجموع الإجازات والغياب الحد المسموح خلال 6 أشهر متتالية (45 يومًا لعقد سنة واحدة، 90 يومًا لعقد سنتين).",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "auto_source": "absence_penalty",
+        "auto_params": {"penalty_per_absence": 5},
+        "sort_order": 7
+      }
+    ]
+  },
+  {
+    "code": "KEY_FOREMAN",
+    "name_en": "Key Foreman",
+    "name_ar": "ملاحظ رئيسي",
+    "criteria": [
+      {
+        "name_en": "Worked Beyond Duty Hours",
+        "name_ar": "العمل بعد ساعات الدوام الرسمية",
+        "guidance_en": "1 point per 3 overtime hours worked.",
+        "guidance_ar": "نقطة واحدة لكل 3 ساعات عمل إضافي.",
+        "max_marks": 20,
+        "input_mode": "marks",
+        "allow_negative": false,
+        "auto_source": "overtime_hours",
+        "auto_params": {"unit_hours": 3, "points_per_unit": 1},
+        "sort_order": 1
+      },
+      {
+        "name_en": "Production Efficiency",
+        "name_ar": "كفاءة الإنتاج",
+        "max_marks": 20,
+        "input_mode": "marks",
+        "sort_order": 2
+      },
+      {
+        "name_en": "Work Quality",
+        "name_ar": "جودة العمل",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 3
+      },
+      {
+        "name_en": "Safety - PPE",
+        "name_ar": "السلامة - معدات الحماية الشخصية",
+        "guidance_en": "-2 points per PPE violation.",
+        "guidance_ar": "خصم نقطتين عن كل مخالفة لمعدات الحماية الشخصية.",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "sort_order": 4
+      },
+      {
+        "name_en": "Hand Tools & Equipment Handling",
+        "name_ar": "الأدوات اليدوية والتعامل مع المعدات",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 5
+      },
+      {
+        "name_en": "Reports & Planning",
+        "name_ar": "التقارير والتخطيط",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 6
+      },
+      {
+        "name_en": "Team Coordination & Consultant Handover",
+        "name_ar": "تنسيق الفريق وتسليم الاستشاري",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "sort_order": 7
+      },
+      {
+        "name_en": "Attendance",
+        "name_ar": "الحضور والانضباط",
+        "guidance_en": "-5 points per absence day; score forced to zero if leave + absence exceeds the allowance over a rolling 6 months (45 days for a 1-year contract, 90 days for a 2-year contract).",
+        "guidance_ar": "خصم 5 نقاط عن كل يوم غياب؛ تُصفَّر الدرجة إذا تجاوز مجموع الإجازات والغياب الحد المسموح خلال 6 أشهر متتالية (45 يومًا لعقد سنة واحدة، 90 يومًا لعقد سنتين).",
+        "max_marks": 10,
+        "input_mode": "marks",
+        "allow_negative": true,
+        "auto_source": "absence_penalty",
+        "auto_params": {"penalty_per_absence": 5},
+        "sort_order": 8
+      }
+    ]
+  },
+  {
+    "code": "LEGACY_TEAM",
+    "name_en": "Legacy Team Assessment",
+    "name_ar": "تقييم الفريق (النموذج القديم)",
+    "criteria": [
+      {
+        "name_en": "Production Efficiency",
+        "name_ar": "كفاءة الإنتاج",
+        "max_marks": 30,
+        "input_mode": "scale_1_5",
+        "sort_order": 1
+      },
+      {
+        "name_en": "Quality Control",
+        "name_ar": "مراقبة الجودة",
+        "max_marks": 20,
+        "input_mode": "scale_1_5",
+        "sort_order": 2
+      },
+      {
+        "name_en": "Safety Performance",
+        "name_ar": "الأداء في السلامة",
+        "max_marks": 10,
+        "input_mode": "scale_1_5",
+        "sort_order": 3
+      },
+      {
+        "name_en": "Attendance",
+        "name_ar": "الحضور",
+        "max_marks": 10,
+        "input_mode": "scale_1_5",
+        "sort_order": 4
+      },
+      {
+        "name_en": "Teamwork",
+        "name_ar": "العمل الجماعي",
+        "max_marks": 10,
+        "input_mode": "scale_1_5",
+        "sort_order": 5
+      },
+      {
+        "name_en": "Skill Development",
+        "name_ar": "تطوير المهارات",
+        "max_marks": 10,
+        "input_mode": "scale_1_5",
+        "sort_order": 6
+      },
+      {
+        "name_en": "Equipment Handling",
+        "name_ar": "التعامل مع المعدات",
+        "max_marks": 5,
+        "input_mode": "scale_1_5",
+        "sort_order": 7
+      },
+      {
+        "name_en": "Communication",
+        "name_ar": "التواصل",
+        "max_marks": 5,
+        "input_mode": "scale_1_5",
+        "sort_order": 8
+      }
+    ]
+  }
+]

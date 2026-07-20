@@ -4,8 +4,11 @@ from sqlalchemy import engine_from_config, pool
 
 # Force model modules to import so their tables register on Base.metadata.
 import app.common.models  # noqa: F401,E402
+import app.modules.attendance.models  # noqa: F401,E402
 import app.modules.auth.models  # noqa: F401,E402
 import app.modules.employees.models  # noqa: F401,E402
+import app.modules.evaluations.models  # noqa: F401,E402
+import app.modules.kpi_templates.models  # noqa: F401,E402
 import app.modules.org.models  # noqa: F401,E402
 from alembic import context
 from app.core.config import get_settings

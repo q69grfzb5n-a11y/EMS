@@ -1,0 +1,37 @@
+{
+  "title": "نماذج التقييم",
+  "create": "نموذج جديد",
+  "code": "الرمز",
+  "name": "الاسم",
+  "nameEn": "الاسم (إنجليزي)",
+  "nameAr": "الاسم (عربي)",
+  "activeVersion": "النسخة النشطة",
+  "noActiveVersion": "لا توجد نسخة نشطة",
+  "cloneVersion": "استنساخ كمسودة جديدة",
+  "activated": "تم تفعيل النسخة.",
+  "activate": "تفعيل هذه النسخة",
+  "totalMarks": "{{total}} / 100",
+  "criterionName": "المعيار",
+  "maxMarks": "الدرجة القصوى",
+  "inputMode": "طريقة الإدخال",
+  "allowNegative": "السماح بالخصم",
+  "autoSource": "مصدر تلقائي",
+  "addCriterion": "إضافة معيار",
+  "deleteCriterion": "حذف",
+  "confirmDeleteCriterion": "هل تريد إزالة هذا المعيار من المسودة؟",
+  "activeNotice": "هذه النسخة نشطة — المعايير مجمّدة. استنسخها لإجراء تعديلات.",
+  "archivedNotice": "هذه النسخة مؤرشفة — المعايير مجمّدة.",
+  "status": {
+    "draft": "مسودة",
+    "active": "نشطة",
+    "archived": "مؤرشفة"
+  },
+  "inputModeValues": {
+    "marks": "درجات",
+    "scale_1_5": "مقياس 1–5"
+  },
+  "errors": {
+    "codeTaken": "يوجد نموذج بهذا الرمز بالفعل.",
+    "sumInvalid": "يجب أن يساوي مجموع الدرجات القصوى للمعايير 100 بالضبط قبل التفعيل."
+  }
+}

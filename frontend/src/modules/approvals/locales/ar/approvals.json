@@ -1,0 +1,27 @@
+{
+  "inbox": {
+    "title": "الموافقات المعلقة"
+  },
+  "timeline": {
+    "title": "السجل الزمني",
+    "empty": "لا يوجد سجل بعد."
+  },
+  "comment": "تعليق",
+  "actions": {
+    "submit": "إرسال",
+    "approve": "اعتماد",
+    "return": "إعادة",
+    "review": "تمت المراجعة"
+  },
+  "roles": {
+    "hr": "الموارد البشرية",
+    "admin": "مدير النظام",
+    "pmo": "مكتب إدارة المشاريع",
+    "factory_manager": "مدير المصنع",
+    "dept_manager": "مدير القسم",
+    "reviewer": "مقيّم",
+    "finance": "المالية",
+    "key_person": "موظف رئيسي",
+    "employee": "موظف"
+  }
+}

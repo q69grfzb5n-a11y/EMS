@@ -1,0 +1,27 @@
+{
+  "inbox": {
+    "title": "Pending Approvals"
+  },
+  "timeline": {
+    "title": "History",
+    "empty": "No history yet."
+  },
+  "comment": "Comment",
+  "actions": {
+    "submit": "Submit",
+    "approve": "Approve",
+    "return": "Return",
+    "review": "Mark Reviewed"
+  },
+  "roles": {
+    "hr": "HR",
+    "admin": "Admin",
+    "pmo": "PMO",
+    "factory_manager": "Factory Manager",
+    "dept_manager": "Dept Manager",
+    "reviewer": "Reviewer",
+    "finance": "Finance",
+    "key_person": "Key Person",
+    "employee": "Employee"
+  }
+}
