@@ -25,6 +25,12 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
       APP_ENV: ${APP_ENV}
       DEFAULT_LOCALE: ${DEFAULT_LOCALE}
+    # Read-only, needed for the one-time initial seed/import
+    # (`scripts/seed.py --core`, `scripts/import_legacy.py`) — not mounted for
+    # routine operation, but seeding a fresh prod deployment needs the real
+    # source workbook, same as the dev profile already provides.
+    volumes:
+      - ./docs:/docs:ro
     depends_on:
       postgres:
         condition: service_healthy

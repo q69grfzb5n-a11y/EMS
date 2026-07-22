@@ -28,11 +28,16 @@ import {
   patchCriterion,
 } from "@/modules/kpi-templates/api/kpiTemplatesApi";
 import type { KpiCriterionOut, KpiTemplateVersionOut } from "@/modules/kpi-templates/types";
+import {
+  downloadBlankTemplateExcel,
+  downloadBlankTemplatePdf,
+} from "@/modules/reports/api/reportsApi";
 import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { hasPermission } from "@/shared/auth/permissions";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
+import { triggerBlobDownload } from "@/shared/utils/download";
 
 const STATUS_COLOR: Record<string, string> = { draft: "gold", active: "green", archived: "default" };
 
@@ -161,6 +166,15 @@ function VersionPanel({
     onSuccess: onChanged,
   });
 
+  const blankExcelMutation = useMutation({
+    mutationFn: () => downloadBlankTemplateExcel(version.id),
+    onSuccess: (blob) => triggerBlobDownload(blob, `blank_evaluation_v${version.version_no}.xlsx`),
+  });
+  const blankPdfMutation = useMutation({
+    mutationFn: () => downloadBlankTemplatePdf(version.id),
+    onSuccess: (blob) => triggerBlobDownload(blob, `blank_evaluation_v${version.version_no}.pdf`),
+  });
+
   return (
     <div style={{ marginTop: 16 }}>
       <Space style={{ marginBottom: 12 }}>
@@ -184,6 +198,14 @@ function VersionPanel({
             </Button>
           </Can>
         )}
+        <Can permission="DOWNLOAD_BLANK_TEMPLATES">
+          <Button loading={blankExcelMutation.isPending} onClick={() => blankExcelMutation.mutate()}>
+            {t("kpiTemplates:downloadBlankExcel")}
+          </Button>
+          <Button loading={blankPdfMutation.isPending} onClick={() => blankPdfMutation.mutate()}>
+            {t("kpiTemplates:downloadBlankPdf")}
+          </Button>
+        </Can>
       </Space>
 
       <Table<KpiCriterionOut>

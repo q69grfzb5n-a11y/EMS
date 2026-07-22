@@ -12,6 +12,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+# Not otherwise used here, but User.employee_id's ForeignKey("employees.id")
+# needs the Employee class registered on the shared mapper registry before any
+# flush touching `users` can resolve it — without this import, seeding a truly
+# fresh database (no prior User row already flushed) fails with
+# NoReferencedTableError. Masked for a long time by this project's live dev
+# database already having the bootstrap admin row from long before this FK
+# existed; caught by Phase 9's from-scratch prod-profile validation.
+import app.modules.employees.models  # noqa: F401
 from app.common.enums import RoleCode, TemplateVersionStatus
 from app.core.security import hash_password
 from app.db.session import SessionLocal

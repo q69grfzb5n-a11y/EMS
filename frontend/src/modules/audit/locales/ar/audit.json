@@ -1,0 +1,12 @@
+{
+  "title": "سجل التدقيق",
+  "entityType": "نوع الكيان",
+  "actorUserId": "معرّف المستخدم",
+  "createdAt": "الوقت",
+  "actor": "المستخدم",
+  "action": "الإجراء",
+  "entityId": "معرّف الكيان",
+  "details": "التفاصيل",
+  "before": "قبل",
+  "after": "بعد"
+}

@@ -35,4 +35,8 @@ Write-Host "==> line limits"
 python scripts/check_line_limits.py
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "==> i18n key parity"
+python scripts/check_i18n_parity.py
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Write-Host "All quality gates passed."

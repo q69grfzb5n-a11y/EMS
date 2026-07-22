@@ -407,6 +407,52 @@ def test_unrelated_role_forbidden_from_viewing_run(client: TestClient, db_sessio
     assert resp.status_code == 403
 
 
+def test_list_runs_omits_runs_an_unrelated_role_cannot_see(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="11b")
+    create_run(client, fx)
+
+    resp = client.get(
+        "/api/v1/incentive-runs", headers=auth_headers(client, fx.reviewer.staff_no)
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_list_runs_scopes_lines_and_total_for_dept_manager(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="11c")
+    run = create_run(client, fx).json()
+
+    resp = client.get(
+        "/api/v1/incentive-runs", headers=auth_headers(client, fx.dept_manager.staff_no)
+    )
+    assert resp.status_code == 200
+    listed = next(r for r in resp.json() if r["id"] == run["id"])
+    assert len(listed["lines"]) == 1
+    assert listed["total_final_amount"] == run["total_final_amount"]
+
+    other_fx = build_fixture(db_session, suffix="11d")
+    resp2 = client.get(
+        "/api/v1/incentive-runs", headers=auth_headers(client, other_fx.dept_manager.staff_no)
+    )
+    listed2 = next(r for r in resp2.json() if r["id"] == run["id"])
+    assert listed2["lines"] == []
+    assert Decimal(listed2["total_final_amount"]) == Decimal(0)
+
+
+def test_full_access_role_sees_every_run_in_list(client: TestClient, db_session: Session) -> None:
+    fx = build_fixture(db_session, suffix="11e")
+    run = create_run(client, fx).json()
+
+    resp = client.get("/api/v1/incentive-runs", headers=auth_headers(client, fx.pmo.staff_no))
+    assert resp.status_code == 200
+    listed = next(r for r in resp.json() if r["id"] == run["id"])
+    assert len(listed["lines"]) == 1
+
+
 # ---- line editing (draft only) -----------------------------------------------
 
 

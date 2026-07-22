@@ -8,6 +8,8 @@
   "activeVersion": "Active Version",
   "noActiveVersion": "No active version",
   "cloneVersion": "Clone to New Draft",
+  "downloadBlankExcel": "Download Blank Excel",
+  "downloadBlankPdf": "Download Blank PDF",
   "activated": "Version activated.",
   "activate": "Activate This Version",
   "totalMarks": "{{total}} / 100",

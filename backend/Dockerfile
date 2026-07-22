@@ -26,10 +26,17 @@ CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "800
 
 # --- prod target: no dev deps, no bind mount ---
 FROM base AS prod
+# Also covers `uv run` at container runtime (entrypoint.sh, CMD): without these,
+# uv's implicit sync-before-run re-installs the dev dependency group (mypy, ruff, ...)
+# on every container start, which both defeats this stage's --no-dev build and would
+# hard-fail in a real network-isolated production host with no PyPI egress.
+ENV UV_FROZEN=1 \
+    UV_NO_DEV=1
 RUN uv sync --frozen --no-install-project --no-dev
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini README.md ./
+COPY scripts ./scripts
 RUN uv sync --frozen --no-dev
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

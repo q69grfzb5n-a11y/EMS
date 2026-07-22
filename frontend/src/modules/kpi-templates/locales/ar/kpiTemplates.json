@@ -8,6 +8,8 @@
   "activeVersion": "النسخة النشطة",
   "noActiveVersion": "لا توجد نسخة نشطة",
   "cloneVersion": "استنساخ كمسودة جديدة",
+  "downloadBlankExcel": "تحميل نموذج فارغ (إكسل)",
+  "downloadBlankPdf": "تحميل نموذج فارغ (PDF)",
   "activated": "تم تفعيل النسخة.",
   "activate": "تفعيل هذه النسخة",
   "totalMarks": "{{total}} / 100",

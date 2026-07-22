@@ -53,7 +53,9 @@ def _actor_department_id(db: Session, actor: User) -> int | None:
 
 def _run_query() -> Select[tuple[IncentiveRun]]:
     return select(IncentiveRun).options(
-        selectinload(IncentiveRun.lines).selectinload(IncentiveLineItem.employee)
+        selectinload(IncentiveRun.lines)
+        .selectinload(IncentiveLineItem.employee)
+        .selectinload(Employee.department)
     )
 
 
@@ -64,6 +66,15 @@ def get_run(db: Session, run_id: int) -> IncentiveRun:
     return run
 
 
+def get_approved_run_for_period(db: Session, period_id: int) -> IncentiveRun | None:
+    """Used by the reports module — the one approved run for a period, if any."""
+    stmt = _run_query().where(
+        IncentiveRun.period_id == period_id,
+        IncentiveRun.status == IncentiveRunStatus.APPROVED.value,
+    )
+    return db.scalars(stmt).first()
+
+
 def list_runs(db: Session, *, period_id: int | None = None) -> list[IncentiveRun]:
     stmt = select(IncentiveRun).order_by(IncentiveRun.id.desc())
     if period_id is not None:
@@ -71,15 +82,38 @@ def list_runs(db: Session, *, period_id: int | None = None) -> list[IncentiveRun
     return list(db.scalars(stmt))
 
 
-def list_lines_scoped(db: Session, actor: User, run_id: int) -> list[IncentiveLineItem]:
-    run = get_run(db, run_id)
+def _scope_lines(db: Session, actor: User, run: IncentiveRun) -> list[IncentiveLineItem] | None:
+    """None means the actor has no visibility into this run at all — distinct
+    from an empty list, which means visibility but nothing in scope."""
     role_codes = set(actor.role_codes)
     if FULL_ACCESS_ROLES.intersection(role_codes):
         return run.lines
     if RoleCode.DEPT_MANAGER.value in role_codes:
         dept_id = _actor_department_id(db, actor)
         return [line for line in run.lines if line.employee.department_id == dept_id]
-    raise forbidden()
+    return None
+
+
+def list_lines_scoped(db: Session, actor: User, run_id: int) -> list[IncentiveLineItem]:
+    run = get_run(db, run_id)
+    lines = _scope_lines(db, actor, run)
+    if lines is None:
+        raise forbidden()
+    return lines
+
+
+def list_runs_scoped(
+    db: Session, actor: User, *, period_id: int | None = None
+) -> list[tuple[IncentiveRun, list[IncentiveLineItem]]]:
+    """Each run paired with the actor's visible lines; a run the actor cannot see
+    at all is omitted entirely — the list endpoint must not bypass the same
+    scoping the single-run detail endpoint already enforces."""
+    pairs = []
+    for run in list_runs(db, period_id=period_id):
+        lines = _scope_lines(db, actor, run)
+        if lines is not None:
+            pairs.append((run, lines))
+    return pairs
 
 
 def get_history(db: Session, run_id: int) -> list[ApprovalAction]:

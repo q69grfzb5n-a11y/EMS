@@ -1,0 +1,18 @@
+{
+  "myIncentive": {
+    "title": "My Incentive",
+    "currency": " SAR",
+    "empty": "No approved incentive payouts yet."
+  },
+  "pendingApprovals": {
+    "title": "Pending Approvals"
+  },
+  "monthStatus": {
+    "title": "Current Month",
+    "empty": "No periods created yet."
+  },
+  "deptTotals": {
+    "title": "Department Totals (Latest Period)",
+    "empty": "No approved incentive run for the latest period yet."
+  }
+}

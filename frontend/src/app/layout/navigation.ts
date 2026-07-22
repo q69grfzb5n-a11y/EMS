@@ -28,5 +28,17 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "approvals", labelKey: "nav.approvals", path: "/approvals" },
   { key: "incentives", labelKey: "nav.incentives", path: "/incentives" },
   { key: "myIncentives", labelKey: "nav.myIncentives", path: "/my-incentives" },
+  {
+    key: "reports",
+    labelKey: "nav.finance",
+    path: "/reports",
+    permission: "VIEW_FINANCE_REPORTS",
+  },
+  {
+    key: "audit",
+    labelKey: "nav.audit",
+    path: "/audit-log",
+    permission: "VIEW_AUDIT_LOG",
+  },
   { key: "users", labelKey: "nav.users", path: "/users", permission: "MANAGE_ROLES" },
 ];

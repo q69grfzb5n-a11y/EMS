@@ -25,4 +25,7 @@ echo "==> frontend: build"
 echo "==> line limits"
 python3 scripts/check_line_limits.py
 
+echo "==> i18n key parity"
+python3 scripts/check_i18n_parity.py
+
 echo "All quality gates passed."

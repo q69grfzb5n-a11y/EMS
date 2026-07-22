@@ -1,0 +1,42 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+{{ font_face_css }}
+body { font-family: 'Noto Naskh Arabic', 'Noto Sans', sans-serif; direction: rtl; margin: 0; }
+@page { size: A4; margin: 2cm; }
+.sheet { page-break-after: always; }
+.sheet:last-child { page-break-after: auto; }
+h2 { font-size: 15pt; margin-bottom: 0.1em; }
+p.meta { margin-top: 0; color: #333; }
+table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+th, td { border: 1px solid #333; padding: 8px; text-align: right; font-size: 11pt; }
+th { background: #eeeeee; }
+.score-box { height: 26px; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+</style>
+</head>
+<body>
+  {% for member in roster %}
+  <div class="sheet">
+    <h2>{{ template_name_ar }}</h2>
+    <p class="meta">{{ member.full_name_ar }} — <span class="ltr">{{ member.staff_no }}</span></p>
+    <table>
+      <thead>
+        <tr><th>المعيار</th><th>الحد الأقصى</th><th>الدرجة</th></tr>
+      </thead>
+      <tbody>
+        {% for c in criteria %}
+        <tr>
+          <td>{{ c.name_ar }}</td>
+          <td class="ltr">{{ c.max_marks }}</td>
+          <td class="score-box"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</body>
+</html>

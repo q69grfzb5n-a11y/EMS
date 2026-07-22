@@ -1,0 +1,9 @@
+{
+  "title": "Reports & Exports",
+  "periodSummary": "Period Summary",
+  "grandTotal": "Grand Total (SAR)",
+  "noApprovedRun": "This period has no approved incentive run yet — nothing to export.",
+  "downloadExcel": "Download Finance Excel",
+  "downloadPdf": "Download PDF Summary",
+  "downloadFailed": "Could not download the file."
+}

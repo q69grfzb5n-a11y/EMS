@@ -1,0 +1,12 @@
+{
+  "title": "Audit Log",
+  "entityType": "Entity Type",
+  "actorUserId": "Actor User ID",
+  "createdAt": "When",
+  "actor": "Actor",
+  "action": "Action",
+  "entityId": "Entity ID",
+  "details": "Details",
+  "before": "Before",
+  "after": "After"
+}

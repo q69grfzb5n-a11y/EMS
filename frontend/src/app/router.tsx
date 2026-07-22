@@ -191,6 +191,30 @@ export const router = createBrowserRouter([
             },
           },
           {
+            element: <RequirePermission permission="VIEW_FINANCE_REPORTS" />,
+            children: [
+              {
+                path: "reports",
+                lazy: async () => {
+                  const { ReportsPage } = await import("@/modules/reports/pages/ReportsPage");
+                  return { Component: ReportsPage };
+                },
+              },
+            ],
+          },
+          {
+            element: <RequirePermission permission="VIEW_AUDIT_LOG" />,
+            children: [
+              {
+                path: "audit-log",
+                lazy: async () => {
+                  const { AuditLogPage } = await import("@/modules/audit/pages/AuditLogPage");
+                  return { Component: AuditLogPage };
+                },
+              },
+            ],
+          },
+          {
             element: <RequirePermission permission="MANAGE_ROLES" />,
             children: [
               {

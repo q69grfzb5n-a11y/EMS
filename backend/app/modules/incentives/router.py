@@ -68,7 +68,7 @@ def _line_to_out(line: IncentiveLineItem) -> IncentiveLineItemOut:
 
 def _run_to_out(run: IncentiveRun, lines: list[IncentiveLineItem] | None = None) -> IncentiveRunOut:
     visible_lines = run.lines if lines is None else lines
-    total = sum((line.final_amount for line in run.lines if not line.is_excluded), Decimal(0))
+    total = sum((line.final_amount for line in visible_lines if not line.is_excluded), Decimal(0))
     return IncentiveRunOut(
         id=run.id,
         period_id=run.period_id,
@@ -99,9 +99,12 @@ def _action_to_out(action: ApprovalAction) -> ApprovalActionOut:
 
 @router.get("", response_model=list[IncentiveRunOut])
 def list_runs_endpoint(
-    _user: CurrentUser, db: DbSession, period_id: int | None = None
+    user: CurrentUser, db: DbSession, period_id: int | None = None
 ) -> list[IncentiveRunOut]:
-    return [_run_to_out(r) for r in service.list_runs(db, period_id=period_id)]
+    return [
+        _run_to_out(run, lines=lines)
+        for run, lines in service.list_runs_scoped(db, user, period_id=period_id)
+    ]
 
 
 @router.post("", response_model=IncentiveRunOut, status_code=201)

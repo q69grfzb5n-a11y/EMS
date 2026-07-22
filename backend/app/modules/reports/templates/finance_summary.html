@@ -1,0 +1,41 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+{{ font_face_css }}
+body { font-family: 'Noto Naskh Arabic', 'Noto Sans', sans-serif; direction: rtl; margin: 0; }
+@page { size: A4; margin: 2cm; }
+h1 { font-size: 16pt; margin-bottom: 0.2em; }
+table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+th, td { border: 1px solid #333; padding: 6px 8px; text-align: right; font-size: 11pt; }
+th { background: #eeeeee; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+tfoot td { font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>ملخص حوافز — دورة رقم <span class="ltr">{{ run_no }}</span> — <span class="ltr">{{ month_str }}</span></h1>
+  <table>
+    <thead>
+      <tr><th>القسم</th><th>عدد الموظفين</th><th>الإجمالي (ر.س)</th></tr>
+    </thead>
+    <tbody>
+      {% for dept in departments %}
+      <tr>
+        <td>{{ dept.name_ar }}</td>
+        <td class="ltr">{{ dept.employee_count }}</td>
+        <td class="ltr">{{ "%.2f"|format(dept.total_amount) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>الإجمالي الكلي</td>
+        <td class="ltr">{{ total_count }}</td>
+        <td class="ltr">{{ "%.2f"|format(grand_total) }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</body>
+</html>
