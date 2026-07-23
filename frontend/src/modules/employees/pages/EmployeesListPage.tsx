@@ -54,25 +54,42 @@ export function EmployeesListPage() {
           style: { cursor: "pointer" },
         })}
         columns={[
-          { title: t("employees:staffNo"), dataIndex: "staff_no", render: (v: string) => <Ltr>{v}</Ltr> },
+          {
+            title: t("employees:staffNo"),
+            dataIndex: "staff_no",
+            width: 130,
+            render: (v: string) => <Ltr>{v}</Ltr>,
+          },
           {
             title: t("employees:name"),
             key: "name",
-            render: (_: unknown, e: EmployeeOut) => <bdi>{localized(e.full_name_en, e.full_name_ar)}</bdi>,
+            width: 220,
+            ellipsis: true,
+            render: (_: unknown, e: EmployeeOut) => (
+              <bdi title={localized(e.full_name_en, e.full_name_ar)}>
+                {localized(e.full_name_en, e.full_name_ar)}
+              </bdi>
+            ),
           },
           {
             title: t("employees:department"),
             key: "department",
-            render: (_: unknown, e: EmployeeOut) => (
-              <bdi>{localized(e.department.name_en, e.department.name_ar)}</bdi>
-            ),
+            width: 180,
+            ellipsis: true,
+            render: (_: unknown, e: EmployeeOut) => {
+              const name = localized(e.department.name_en, e.department.name_ar);
+              return <bdi title={name}>{name}</bdi>;
+            },
           },
           {
             title: t("employees:position"),
             key: "position",
-            render: (_: unknown, e: EmployeeOut) => (
-              <bdi>{localized(e.position.title_en, e.position.title_ar)}</bdi>
-            ),
+            width: 180,
+            ellipsis: true,
+            render: (_: unknown, e: EmployeeOut) => {
+              const title = localized(e.position.title_en, e.position.title_ar);
+              return <bdi title={title}>{title}</bdi>;
+            },
           },
           {
             title: t("employees:status"),

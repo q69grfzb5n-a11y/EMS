@@ -1,6 +1,8 @@
 {
   "app": {
-    "name": "Incentive Management System"
+    "name": "Incentive Management System",
+    "orgShort": "SAJCO",
+    "orgFull": "SHIBH AL-JAZIRA Factory for Precast Concrete"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -35,6 +37,18 @@
     "search": "Search...",
     "totalRows": "{{count}} rows",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "currency": "{{amount}} SAR",
+    "currencyUnit": "SAR",
+    "noData": "No data",
+    "loadError": "Something went wrong while loading this.",
+    "saveError": "Something went wrong while saving. Please try again.",
+    "saveSuccess": "Saved successfully.",
+    "retry": "Retry",
+    "notFound": {
+      "title": "Page not found",
+      "subtitle": "The page you're looking for doesn't exist or has moved.",
+      "backHome": "Back to dashboard"
+    }
   }
 }

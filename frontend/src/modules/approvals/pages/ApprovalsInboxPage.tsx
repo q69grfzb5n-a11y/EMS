@@ -1,4 +1,4 @@
-import { Table, Tag, Typography } from "antd";
+import { Alert, Button, Tag, Typography } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { EvaluationStatusTag } from "@/modules/evaluations/components/Evaluation
 import { TransferStatusTag } from "@/modules/transfers/components/TransferStatusTag";
 import type { PendingItemOut } from "@/shared/types/approvals";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
+import { DataTable } from "@/shared/ui/DataTable";
 import { Ltr } from "@/shared/ui/Ltr";
 
 export function ApprovalsInboxPage() {
@@ -19,11 +20,24 @@ export function ApprovalsInboxPage() {
   return (
     <div>
       <Typography.Title level={3}>{t("approvals:inbox.title")}</Typography.Title>
-      <Table<PendingItemOut>
+      {query.isError && (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          style={{ marginBottom: 16 }}
+          action={
+            <Button size="small" onClick={() => void query.refetch()}>
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      )}
+      <DataTable<PendingItemOut>
         rowKey={(record) => `${record.entity_type}-${record.id}`}
         loading={query.isLoading}
         dataSource={query.data ?? []}
-        pagination={{ pageSize: 50 }}
+        searchableText={(i) => [i.employee.staff_no, i.employee.full_name_en ?? "", i.employee.full_name_ar]}
         onRow={(record) => ({
           onClick: () => navigate(`/${record.entity_type === "evaluation" ? "evaluations" : "transfers"}/${record.id}`),
           style: { cursor: "pointer" },

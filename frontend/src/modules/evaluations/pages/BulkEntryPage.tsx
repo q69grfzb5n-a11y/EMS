@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Modal, Select, Space, Table, Typography, message } from "antd";
+import { Alert, Button, Form, Modal, Popconfirm, Select, Space, Typography, message } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,7 @@ import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { ROLES, hasAnyRole } from "@/shared/auth/permissions";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
+import { DataTable } from "@/shared/ui/DataTable";
 import { Ltr } from "@/shared/ui/Ltr";
 
 export function BulkEntryPage() {
@@ -45,6 +46,7 @@ export function BulkEntryPage() {
       void message.success(t("evaluations:transitionSuccess"));
       void queryClient.invalidateQueries({ queryKey: ["evaluations"] });
     },
+    onError: () => void message.error(t("evaluations:transitionFailed")),
   });
 
   const bulkCreateMutation = useMutation({
@@ -116,11 +118,25 @@ export function BulkEntryPage() {
         }))}
       />
 
-      <Table<EvaluationOut>
+      {evaluationsQuery.isError && (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          style={{ marginBottom: 16 }}
+          action={
+            <Button size="small" onClick={() => void evaluationsQuery.refetch()}>
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      )}
+
+      <DataTable<EvaluationOut>
         rowKey="id"
         loading={evaluationsQuery.isLoading}
         dataSource={evaluationsQuery.data ?? []}
-        pagination={{ pageSize: 50 }}
+        searchableText={(e) => [e.employee.staff_no, e.employee.full_name_en ?? "", e.employee.full_name_ar]}
         columns={[
           {
             title: t("evaluations:staffNo"),
@@ -161,9 +177,21 @@ export function BulkEntryPage() {
                       <Button size="small" onClick={() => setEditing(e)}>
                         {t("common:common.edit")}
                       </Button>
-                      <Button size="small" type="primary" onClick={() => submitMutation.mutate(e.id)}>
-                        {t("approvals:actions.submit", { ns: "approvals" })}
-                      </Button>
+                      <Popconfirm
+                        title={t("evaluations:bulkEntry.submitConfirmTitle")}
+                        description={t("evaluations:bulkEntry.submitConfirmDescription")}
+                        onConfirm={() => submitMutation.mutate(e.id)}
+                        okText={t("approvals:actions.submit", { ns: "approvals" })}
+                        cancelText={t("common:common.cancel")}
+                      >
+                        <Button
+                          size="small"
+                          type="primary"
+                          loading={submitMutation.isPending && submitMutation.variables === e.id}
+                        >
+                          {t("approvals:actions.submit", { ns: "approvals" })}
+                        </Button>
+                      </Popconfirm>
                     </>
                   )}
                 </Space>

@@ -1,4 +1,4 @@
-import { Card, Empty } from "antd";
+import { Alert, Button, Card, Empty } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -24,12 +24,31 @@ export function DeptTotalsChart() {
     total: Number(d.total_amount),
   }));
 
+  const isError = periodsQuery.isError || summaryQuery.isError;
+
   return (
     <Card
       title={t("dashboard:deptTotals.title")}
       loading={periodsQuery.isLoading || summaryQuery.isLoading}
     >
-      {chartData.length > 0 ? (
+      {isError ? (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          action={
+            <Button
+              size="small"
+              onClick={() => {
+                void periodsQuery.refetch();
+                void summaryQuery.refetch();
+              }}
+            >
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      ) : chartData.length > 0 ? (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />

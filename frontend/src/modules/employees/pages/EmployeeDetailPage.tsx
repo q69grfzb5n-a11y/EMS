@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Space, Tabs, Table, Tag, Typography } from "antd";
+import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Space, Tabs, Table, Tag, Typography, message } from "antd";
 import { DatePicker } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -21,12 +21,11 @@ import { hasPermission } from "@/shared/auth/permissions";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
 import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
+import { QueryState } from "@/shared/ui/QueryState";
 
 export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const employeeId = Number(id);
-  const { t } = useTranslation(["common", "employees", "org"]);
-  const localized = useLocalizedField();
   const canViewSalary = useAuthStore((s) => hasPermission(s.user?.roles ?? [], "VIEW_SALARY"));
   const canManageEmployees = useAuthStore((s) => hasPermission(s.user?.roles ?? [], "MANAGE_EMPLOYEES"));
 
@@ -36,10 +35,34 @@ export function EmployeeDetailPage() {
     enabled: Number.isFinite(employeeId),
   });
 
-  if (employeeQuery.isLoading || !employeeQuery.data) {
-    return null;
-  }
-  const employee = employeeQuery.data;
+  return (
+    <QueryState
+      isLoading={employeeQuery.isLoading}
+      isError={employeeQuery.isError}
+      onRetry={() => void employeeQuery.refetch()}
+    >
+      {employeeQuery.data && (
+        <EmployeeDetailContent
+          employee={employeeQuery.data}
+          canViewSalary={canViewSalary}
+          canManageEmployees={canManageEmployees}
+        />
+      )}
+    </QueryState>
+  );
+}
+
+function EmployeeDetailContent({
+  employee,
+  canViewSalary,
+  canManageEmployees,
+}: {
+  employee: EmployeeOut;
+  canViewSalary: boolean;
+  canManageEmployees: boolean;
+}) {
+  const { t } = useTranslation(["common", "employees"]);
+  const localized = useLocalizedField();
 
   const items = [
     {
@@ -92,10 +115,12 @@ function OverviewTab({ employee, canEdit }: { employee: EmployeeOut; canEdit: bo
       contract_position_title?: string;
     }) => patchEmployee(employee.id, payload),
     onSuccess: () => {
+      void message.success(t("common:common.saveSuccess"));
       setEditOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["employees", employee.id] });
       void queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
+    onError: () => void message.error(t("common:common.saveError")),
   });
 
   return (
@@ -192,7 +217,11 @@ function ReviewerTab({ employeeId, currentReviewerId }: { employeeId: number; cu
 
   const mutation = useMutation({
     mutationFn: (reviewerUserId: number) => assignReviewer(employeeId, reviewerUserId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["employees", employeeId] }),
+    onSuccess: () => {
+      void message.success(t("employees:reviewer.assignSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["employees", employeeId] });
+    },
+    onError: () => void message.error(t("common:common.saveError")),
   });
 
   return (
@@ -222,8 +251,10 @@ function SalaryTab({ employeeId }: { employeeId: number }) {
   const createMutation = useMutation({
     mutationFn: (payload: { effective_from: string; effective_to?: string; base_salary: string }) =>
       createSalary(employeeId, payload),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ["employees", employeeId, "salaries"] }),
+    onSuccess: () => {
+      void message.success(t("employees:salary.addSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["employees", employeeId, "salaries"] });
+    },
   });
 
   return (
@@ -245,7 +276,7 @@ function SalaryTab({ employeeId }: { employeeId: number }) {
           {
             title: t("employees:salary.baseSalary"),
             dataIndex: "base_salary",
-            render: (v: string) => <Ltr>{v} SAR</Ltr>,
+            render: (v: string) => <Ltr>{t("common:common.currency", { amount: v })}</Ltr>,
           },
         ]}
       />
@@ -270,7 +301,11 @@ function SalaryTab({ employeeId }: { employeeId: number }) {
               <DatePicker placeholder={t("org:rates.to")} />
             </Form.Item>
             <Form.Item name="base_salary" rules={[{ required: true }]}>
-              <InputNumber min={0} addonAfter="SAR" placeholder={t("employees:salary.baseSalary")} />
+              <InputNumber
+                min={0}
+                addonAfter={t("common:common.currencyUnit")}
+                placeholder={t("employees:salary.baseSalary")}
+              />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={createMutation.isPending}>

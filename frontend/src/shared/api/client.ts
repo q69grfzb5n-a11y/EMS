@@ -35,6 +35,20 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as RetryableConfig | undefined;
     const url = originalRequest?.url ?? "";
+
+    // The backend enforces must_change_password on every endpoint except
+    // /auth/me and /auth/change-password (see backend/app/core/deps.py). A
+    // stale tab (or an admin forcing a reset on an already-logged-in user)
+    // can hit this on any request; syncing the flag here means RequireAuth's
+    // existing redirect takes over on the next render instead of the caller
+    // just seeing a raw 403.
+    if (
+      error.response?.status === 403 &&
+      error.response.data?.error?.code === "password_change_required"
+    ) {
+      useAuthStore.getState().updateUser({ must_change_password: true });
+    }
+
     const isRetryableAuthFailure =
       error.response?.status === 401 &&
       originalRequest &&

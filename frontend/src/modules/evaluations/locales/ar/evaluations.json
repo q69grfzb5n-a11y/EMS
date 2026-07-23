@@ -32,7 +32,9 @@
     "title": "فريقي — التقييمات",
     "createForDepartment": "إنشاء لقسم",
     "department": "القسم",
-    "open": "فتح"
+    "open": "فتح",
+    "submitConfirmTitle": "هل تريد إرسال هذا التقييم؟",
+    "submitConfirmDescription": "لن تتمكن من تعديل الدرجات حتى تتم إعادته إليك."
   },
   "selfAppraisal": {
     "start": "بدء تقييمي الذاتي",

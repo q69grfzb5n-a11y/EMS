@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Modal, Select, Space, Table, Typography, message } from "antd";
+import { Alert, Button, Form, Modal, Select, Space, Typography, message } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { createRun, listRuns } from "@/modules/incentives/api/incentivesApi";
 import { IncentiveRunStatusTag } from "@/modules/incentives/components/IncentiveRunStatusTag";
 import type { FormulaMode, IncentiveRunOut } from "@/modules/incentives/types";
 import { Can } from "@/shared/auth/Can";
+import { DataTable } from "@/shared/ui/DataTable";
 import { Ltr } from "@/shared/ui/Ltr";
 
 interface CreateFormValues {
@@ -74,11 +75,25 @@ export function IncentiveRunsPage() {
         }))}
       />
 
-      <Table<IncentiveRunOut>
+      {runsQuery.isError && (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          style={{ marginBottom: 16 }}
+          action={
+            <Button size="small" onClick={() => void runsQuery.refetch()}>
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      )}
+
+      <DataTable<IncentiveRunOut>
         rowKey="id"
         loading={runsQuery.isLoading}
         dataSource={runsQuery.data ?? []}
-        pagination={{ pageSize: 50 }}
+        searchableText={(r) => [String(r.run_no), r.status]}
         onRow={(record) => ({
           onClick: () => navigate(`/incentives/${record.id}`),
           style: { cursor: "pointer" },

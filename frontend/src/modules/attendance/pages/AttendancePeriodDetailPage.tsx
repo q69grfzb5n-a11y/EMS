@@ -7,6 +7,7 @@ import {
   Form,
   InputNumber,
   Modal,
+  Popconfirm,
   Space,
   Table,
   Tabs,
@@ -33,10 +34,12 @@ import type {
   AttendanceImportOut,
   AttendanceRecordOut,
   ImportPreviewOut,
+  IncentivePeriodOut,
 } from "@/modules/attendance/types";
 import { Can } from "@/shared/auth/Can";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
+import { QueryState } from "@/shared/ui/QueryState";
 
 function isPreview(
   result: ImportPreviewOut | AttendanceImportOut,
@@ -47,15 +50,35 @@ function isPreview(
 export function AttendancePeriodDetailPage() {
   const { id } = useParams<{ id: string }>();
   const periodId = Number(id);
-  const { t } = useTranslation(["common", "attendance"]);
-  const localized = useLocalizedField();
-  const queryClient = useQueryClient();
 
   const periodQuery = useQuery({
     queryKey: ["attendance", "periods", periodId],
     queryFn: () => getPeriod(periodId),
     enabled: Number.isFinite(periodId),
   });
+
+  return (
+    <QueryState
+      isLoading={periodQuery.isLoading}
+      isError={periodQuery.isError}
+      onRetry={() => void periodQuery.refetch()}
+    >
+      {periodQuery.data && <AttendancePeriodDetailContent periodId={periodId} period={periodQuery.data} />}
+    </QueryState>
+  );
+}
+
+function AttendancePeriodDetailContent({
+  periodId,
+  period,
+}: {
+  periodId: number;
+  period: IncentivePeriodOut;
+}) {
+  const { t } = useTranslation(["common", "attendance"]);
+  const localized = useLocalizedField();
+  const queryClient = useQueryClient();
+
   const recordsQuery = useQuery({
     queryKey: ["attendance", "periods", periodId, "records"],
     queryFn: () => listRecords(periodId),
@@ -69,11 +92,19 @@ export function AttendancePeriodDetailPage() {
 
   const lockMutation = useMutation({
     mutationFn: () => lockPeriod(periodId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId] }),
+    onSuccess: () => {
+      void message.success(t("attendance:lockSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId] });
+    },
+    onError: () => void message.error(t("common:common.saveError")),
   });
   const unlockMutation = useMutation({
     mutationFn: () => unlockPeriod(periodId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId] }),
+    onSuccess: () => {
+      void message.success(t("attendance:unlockSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId] });
+    },
+    onError: () => void message.error(t("common:common.saveError")),
   });
 
   const invalidateAfterCommit = () => {
@@ -81,8 +112,6 @@ export function AttendancePeriodDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ["attendance", "periods", periodId, "imports"] });
   };
 
-  if (!periodQuery.data) return null;
-  const period = periodQuery.data;
   const isLocked = period.status === "locked";
 
   return (
@@ -101,9 +130,15 @@ export function AttendancePeriodDetailPage() {
                 {t("attendance:unlock")}
               </Button>
             ) : (
-              <Button loading={lockMutation.isPending} onClick={() => lockMutation.mutate()}>
-                {t("attendance:lock")}
-              </Button>
+              <Popconfirm
+                title={t("attendance:lockConfirmTitle")}
+                description={t("attendance:lockConfirmDescription")}
+                onConfirm={() => lockMutation.mutate()}
+                okText={t("attendance:lock")}
+                cancelText={t("common:common.cancel")}
+              >
+                <Button loading={lockMutation.isPending}>{t("attendance:lock")}</Button>
+              </Popconfirm>
             )}
           </Can>
         </Space>

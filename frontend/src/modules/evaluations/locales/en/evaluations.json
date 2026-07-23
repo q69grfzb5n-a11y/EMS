@@ -32,7 +32,9 @@
     "title": "My Team — Evaluations",
     "createForDepartment": "Create for a Department",
     "department": "Department",
-    "open": "Open"
+    "open": "Open",
+    "submitConfirmTitle": "Submit this evaluation?",
+    "submitConfirmDescription": "You won't be able to edit the scores until it comes back."
   },
   "selfAppraisal": {
     "start": "Start My Self-Appraisal",

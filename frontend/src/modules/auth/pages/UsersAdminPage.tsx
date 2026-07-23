@@ -27,6 +27,7 @@ import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
 import { hasPermission } from "@/shared/auth/permissions";
+import { extractApiErrorCode } from "@/shared/utils/apiError";
 
 export function UsersAdminPage() {
   const { t } = useTranslation(["common", "auth"]);
@@ -42,6 +43,10 @@ export function UsersAdminPage() {
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ["users"] });
 
+  const showError = (err: unknown) => {
+    void message.error(t(`auth:errors.${extractApiErrorCode(err)}`));
+  };
+
   const createMutation = useMutation({
     mutationFn: ({ staffNo, password }: { staffNo: string; password: string }) =>
       createUser(staffNo, password),
@@ -50,11 +55,13 @@ export function UsersAdminPage() {
       setCreateOpen(false);
       void invalidateUsers();
     },
+    onError: showError,
   });
 
   const toggleActiveMutation = useMutation({
     mutationFn: (user: UserOut) => patchUser(user.id, !user.is_active),
     onSuccess: () => void invalidateUsers(),
+    onError: showError,
   });
 
   const assignRolesMutation = useMutation({
@@ -64,6 +71,7 @@ export function UsersAdminPage() {
       setRolesModalUser(null);
       void invalidateUsers();
     },
+    onError: showError,
   });
 
   const resetPasswordMutation = useMutation({
@@ -74,6 +82,7 @@ export function UsersAdminPage() {
       setResetModalUser(null);
       void invalidateUsers();
     },
+    onError: showError,
   });
 
   const columns = [
@@ -111,7 +120,11 @@ export function UsersAdminPage() {
               {t("auth:users.resetPassword")}
             </Button>
           </Can>
-          <Button size="small" onClick={() => toggleActiveMutation.mutate(user)}>
+          <Button
+            size="small"
+            loading={toggleActiveMutation.isPending && toggleActiveMutation.variables?.id === user.id}
+            onClick={() => toggleActiveMutation.mutate(user)}
+          >
             {user.is_active ? t("auth:users.deactivate") : t("auth:users.activate")}
           </Button>
         </Space>
@@ -138,6 +151,7 @@ export function UsersAdminPage() {
         dataSource={usersQuery.data ?? []}
         columns={columns}
         pagination={false}
+        locale={{ emptyText: t("common:noData") }}
       />
 
       <Modal
@@ -154,16 +168,39 @@ export function UsersAdminPage() {
           }
         >
           <Form.Item name="staffNo" label={t("auth:users.staffNo")} rules={[{ required: true }]}>
-            <Input dir="ltr" styles={LTR_INPUT_STYLES} />
+            <Input autoFocus autoComplete="username" dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
           <Form.Item
             name="password"
             label={t("auth:users.password")}
-            rules={[{ required: true, min: 8 }]}
+            validateTrigger="onBlur"
+            rules={[
+              { required: true },
+              { min: 8, message: t("auth:changePassword.passwordTooShort") },
+            ]}
           >
-            <Input.Password dir="ltr" styles={LTR_INPUT_STYLES} />
+            <Input.Password autoComplete="new-password" dir="ltr" styles={LTR_INPUT_STYLES} />
           </Form.Item>
-          <Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label={t("auth:changePassword.confirmPassword")}
+            dependencies={["password"]}
+            validateTrigger="onBlur"
+            rules={[
+              { required: true },
+              ({ getFieldValue }) => ({
+                validator(_, value: string) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error(t("auth:changePassword.passwordMismatch")));
+                },
+              }),
+            ]}
+          >
+            <Input.Password autoComplete="new-password" dir="ltr" styles={LTR_INPUT_STYLES} />
+          </Form.Item>
+          <Form.Item style={{ marginBottom: 0 }}>
             <Button type="primary" htmlType="submit" loading={createMutation.isPending} block>
               {t("auth:users.create")}
             </Button>
@@ -203,11 +240,39 @@ export function UsersAdminPage() {
             <Form.Item
               name="newPassword"
               label={t("auth:users.newPassword")}
-              rules={[{ required: true, min: 8 }]}
+              validateTrigger="onBlur"
+              rules={[
+                { required: true },
+                { min: 8, message: t("auth:changePassword.passwordTooShort") },
+              ]}
             >
-              <Input.Password autoFocus dir="ltr" styles={LTR_INPUT_STYLES} />
+              <Input.Password
+                autoFocus
+                autoComplete="new-password"
+                dir="ltr"
+                styles={LTR_INPUT_STYLES}
+              />
             </Form.Item>
-            <Form.Item>
+            <Form.Item
+              name="confirmPassword"
+              label={t("auth:changePassword.confirmPassword")}
+              dependencies={["newPassword"]}
+              validateTrigger="onBlur"
+              rules={[
+                { required: true },
+                ({ getFieldValue }) => ({
+                  validator(_, value: string) {
+                    if (!value || getFieldValue("newPassword") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error(t("auth:changePassword.passwordMismatch")));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password autoComplete="new-password" dir="ltr" styles={LTR_INPUT_STYLES} />
+            </Form.Item>
+            <Form.Item style={{ marginBottom: 0 }}>
               <Button
                 type="primary"
                 htmlType="submit"

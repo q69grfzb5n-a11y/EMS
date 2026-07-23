@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ar";
 import "dayjs/locale/en";
 
+import { appTheme } from "@/app/theme";
 import type { SupportedLanguage } from "@/shared/i18n";
 
 const DIRECTIONS: Record<SupportedLanguage, "rtl" | "ltr"> = {
@@ -40,7 +41,11 @@ export function LocaleProvider({ children }: PropsWithChildren) {
   }, [i18n, language]);
 
   return (
-    <ConfigProvider direction={DIRECTIONS[language]} locale={ANTD_LOCALES[language]}>
+    <ConfigProvider
+      direction={DIRECTIONS[language]}
+      locale={ANTD_LOCALES[language]}
+      theme={appTheme}
+    >
       {children}
     </ConfigProvider>
   );

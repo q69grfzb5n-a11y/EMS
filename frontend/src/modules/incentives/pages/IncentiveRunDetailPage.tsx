@@ -37,10 +37,12 @@ import {
 import { IncentiveLineBreakdown } from "@/modules/incentives/components/IncentiveLineBreakdown";
 import { IncentiveRunStatusTag } from "@/modules/incentives/components/IncentiveRunStatusTag";
 import type { ExceptionOut, IncentiveLineItemOut } from "@/modules/incentives/types";
+import type { IncentiveRunOut } from "@/modules/incentives/types";
 import { ROLES, hasAnyRole } from "@/shared/auth/permissions";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
+import { QueryState } from "@/shared/ui/QueryState";
 
 type Action = "submit_audit" | "complete_audit" | "approve" | "reject";
 
@@ -68,6 +70,25 @@ interface DeptTotal {
 export function IncentiveRunDetailPage() {
   const { id } = useParams<{ id: string }>();
   const runId = Number(id);
+
+  const runQuery = useQuery({
+    queryKey: ["incentive-runs", runId],
+    queryFn: () => getRun(runId),
+    enabled: Number.isFinite(runId),
+  });
+
+  return (
+    <QueryState
+      isLoading={runQuery.isLoading}
+      isError={runQuery.isError}
+      onRetry={() => void runQuery.refetch()}
+    >
+      {runQuery.data && <IncentiveRunDetailContent runId={runId} run={runQuery.data} />}
+    </QueryState>
+  );
+}
+
+function IncentiveRunDetailContent({ runId, run }: { runId: number; run: IncentiveRunOut }) {
   const { t } = useTranslation(["common", "incentives", "approvals"]);
   const localized = useLocalizedField();
   const queryClient = useQueryClient();
@@ -75,11 +96,6 @@ export function IncentiveRunDetailPage() {
   const [pendingAction, setPendingAction] = useState<Action | null>(null);
   const [editingLine, setEditingLine] = useState<IncentiveLineItemOut | null>(null);
 
-  const runQuery = useQuery({
-    queryKey: ["incentive-runs", runId],
-    queryFn: () => getRun(runId),
-    enabled: Number.isFinite(runId),
-  });
   const historyQuery = useQuery({
     queryKey: ["incentive-runs", runId, "history"],
     queryFn: () => getRunHistory(runId),
@@ -116,12 +132,12 @@ export function IncentiveRunDetailPage() {
       void message.success(t("incentives:recalculated"));
       invalidate();
     },
+    onError: () => void message.error(t("common:common.saveError")),
   });
 
   const deptTotals: DeptTotal[] = useMemo(() => {
-    if (!runQuery.data) return [];
     const byDept = new Map<string, DeptTotal>();
-    for (const line of runQuery.data.lines) {
+    for (const line of run.lines) {
       if (line.is_excluded) continue;
       const dept = line.employee.department;
       const existing = byDept.get(dept.code);
@@ -139,10 +155,8 @@ export function IncentiveRunDetailPage() {
       }
     }
     return Array.from(byDept.values()).sort((a, b) => b.total - a.total);
-  }, [runQuery.data, localized]);
+  }, [run.lines, localized]);
 
-  if (!runQuery.data) return null;
-  const run = runQuery.data;
   const roles = currentUser?.roles ?? [];
   const actions = availableActions(run.status, roles);
   const editable = run.status === "draft";
@@ -270,6 +284,7 @@ export function IncentiveRunDetailPage() {
               {
                 title: t("evaluations:employeeName", { ns: "evaluations" }),
                 key: "name",
+                ellipsis: true,
                 render: (_: unknown, l: IncentiveLineItemOut) => (
                   <bdi>{localized(l.employee.full_name_en, l.employee.full_name_ar)}</bdi>
                 ),
@@ -277,6 +292,7 @@ export function IncentiveRunDetailPage() {
               {
                 title: t("incentives:department"),
                 key: "dept",
+                ellipsis: true,
                 render: (_: unknown, l: IncentiveLineItemOut) => (
                   <bdi>{localized(l.employee.department.name_en, l.employee.department.name_ar)}</bdi>
                 ),

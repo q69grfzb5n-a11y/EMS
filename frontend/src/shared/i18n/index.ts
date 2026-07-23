@@ -37,6 +37,14 @@ void i18next
     ns: ["common"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
+    // Namespaces load on demand (see resourcesToBackend above) with no
+    // <Suspense> boundary anywhere in the app to catch the resulting
+    // suspend — react-i18next's default useSuspense:true throws React error
+    // #426 ("suspended while responding to synchronous input") the moment a
+    // page needs a namespace that isn't loaded yet outside a startTransition.
+    // Disabling it renders with whatever's available and re-renders normally
+    // once the namespace resolves, instead of suspending at all.
+    react: { useSuspense: false },
   });
 
 export default i18next;

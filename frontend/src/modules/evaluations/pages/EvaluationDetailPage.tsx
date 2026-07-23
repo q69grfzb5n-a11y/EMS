@@ -15,9 +15,11 @@ import {
 import { EvaluationScoresForm, EvaluationStatusTag } from "@/modules/evaluations/components/EvaluationScoresForm";
 import { ApprovalActionModal } from "@/modules/approvals/components/ApprovalActionModal";
 import { ApprovalTimeline } from "@/modules/approvals/components/ApprovalTimeline";
+import type { EvaluationOut } from "@/modules/evaluations/types";
 import { useAuthStore } from "@/shared/auth/authStore";
 import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
 import { Ltr } from "@/shared/ui/Ltr";
+import { QueryState } from "@/shared/ui/QueryState";
 
 type Action = "submit" | "approve" | "return" | "review";
 
@@ -44,17 +46,39 @@ function availableActions(status: string, kind: string, roles: string[], isOwner
 export function EvaluationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const evaluationId = Number(id);
-  const { t } = useTranslation(["common", "evaluations", "approvals"]);
-  const localized = useLocalizedField();
-  const queryClient = useQueryClient();
-  const currentUser = useAuthStore((s) => s.user);
-  const [pendingAction, setPendingAction] = useState<Action | null>(null);
 
   const evaluationQuery = useQuery({
     queryKey: ["evaluations", evaluationId],
     queryFn: () => getEvaluation(evaluationId),
     enabled: Number.isFinite(evaluationId),
   });
+
+  return (
+    <QueryState
+      isLoading={evaluationQuery.isLoading}
+      isError={evaluationQuery.isError}
+      onRetry={() => void evaluationQuery.refetch()}
+    >
+      {evaluationQuery.data && (
+        <EvaluationDetailContent evaluationId={evaluationId} evaluation={evaluationQuery.data} />
+      )}
+    </QueryState>
+  );
+}
+
+function EvaluationDetailContent({
+  evaluationId,
+  evaluation,
+}: {
+  evaluationId: number;
+  evaluation: EvaluationOut;
+}) {
+  const { t } = useTranslation(["common", "evaluations", "approvals"]);
+  const localized = useLocalizedField();
+  const queryClient = useQueryClient();
+  const currentUser = useAuthStore((s) => s.user);
+  const [pendingAction, setPendingAction] = useState<Action | null>(null);
+
   const historyQuery = useQuery({
     queryKey: ["evaluations", evaluationId, "history"],
     queryFn: () => getEvaluationHistory(evaluationId),
@@ -76,8 +100,6 @@ export function EvaluationDetailPage() {
     onError: () => void message.error(t("evaluations:transitionFailed")),
   });
 
-  if (!evaluationQuery.data) return null;
-  const evaluation = evaluationQuery.data;
   const roles = currentUser?.roles ?? [];
   const isOwner = currentUser !== null && evaluation.owner_user_id === currentUser.id;
   const editable = isOwner && (evaluation.status === "draft" || evaluation.status === "returned");

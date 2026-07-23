@@ -4,6 +4,9 @@ const KNOWN_ERROR_CODES = new Set([
   "invalid_credentials",
   "invalid_current_password",
   "staff_no_taken",
+  "account_locked",
+  "login_rate_limited",
+  "password_change_required",
 ]);
 
 /**

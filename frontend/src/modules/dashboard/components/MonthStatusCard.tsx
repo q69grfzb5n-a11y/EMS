@@ -1,4 +1,4 @@
-import { Card, Empty, Tag } from "antd";
+import { Alert, Button, Card, Empty, Tag } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -13,7 +13,18 @@ export function MonthStatusCard() {
 
   return (
     <Card title={t("dashboard:monthStatus.title")} loading={query.isLoading}>
-      {latest ? (
+      {query.isError ? (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          action={
+            <Button size="small" onClick={() => void query.refetch()}>
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      ) : latest ? (
         <>
           <Ltr>
             {String(latest.month).padStart(2, "0")}-{latest.year}

@@ -1,4 +1,4 @@
-import { Card, Empty, Statistic } from "antd";
+import { Alert, Button, Card, Empty, Statistic } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +12,18 @@ export function MyIncentiveCard() {
 
   return (
     <Card title={t("dashboard:myIncentive.title")} loading={query.isLoading}>
-      {latest ? (
+      {query.isError ? (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          action={
+            <Button size="small" onClick={() => void query.refetch()}>
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      ) : latest ? (
         <Statistic
           value={Number(latest.final_amount)}
           suffix={t("dashboard:myIncentive.currency")}

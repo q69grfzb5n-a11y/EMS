@@ -1,4 +1,4 @@
-import { Card, Statistic } from "antd";
+import { Alert, Button, Card, Statistic } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +14,29 @@ export function PendingApprovalsCard() {
     <Card
       title={t("dashboard:pendingApprovals.title")}
       loading={query.isLoading}
-      hoverable
-      onClick={() => navigate("/approvals")}
+      hoverable={!query.isError}
+      onClick={() => !query.isError && navigate("/approvals")}
     >
-      <Statistic value={query.data?.length ?? 0} />
+      {query.isError ? (
+        <Alert
+          type="error"
+          showIcon
+          message={t("common:common.loadError")}
+          action={
+            <Button
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                void query.refetch();
+              }}
+            >
+              {t("common:common.retry")}
+            </Button>
+          }
+        />
+      ) : (
+        <Statistic value={query.data?.length ?? 0} />
+      )}
     </Card>
   );
 }

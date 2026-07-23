@@ -24,11 +24,13 @@
   "reviewer": {
     "current": "Current reviewer (user id)",
     "none": "Not assigned",
-    "assign": "Assign reviewer"
+    "assign": "Assign reviewer",
+    "assignSuccess": "Reviewer assigned successfully."
   },
   "salary": {
     "baseSalary": "Base Salary",
     "addNew": "Add New Salary Window",
+    "addSuccess": "Salary window added successfully.",
     "overlapError": "This date range overlaps an existing salary window."
   }
 }

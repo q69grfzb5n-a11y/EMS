@@ -6,6 +6,10 @@
   "month": "Month",
   "lock": "Lock Period",
   "unlock": "Unlock Period",
+  "lockConfirmTitle": "Lock this period?",
+  "lockConfirmDescription": "Attendance records can no longer be edited or re-imported once the period is locked.",
+  "lockSuccess": "Period locked.",
+  "unlockSuccess": "Period unlocked.",
   "pools": {
     "title": "Incentive Pool",
     "target": "Target Pool (SAR)",

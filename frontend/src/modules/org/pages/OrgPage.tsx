@@ -219,7 +219,7 @@ function PositionsTab() {
               return (
                 <Ltr>
                   {rate.flat_ref_amount
-                    ? `${rate.flat_ref_amount} SAR`
+                    ? t("common:common.currency", { amount: rate.flat_ref_amount })
                     : `${(Number(rate.incentive_pct) * 100).toFixed(2)}%`}
                 </Ltr>
               );
@@ -382,7 +382,7 @@ function PositionRatesModal({ position, onClose }: { position: PositionOut; onCl
             <DatePicker />
           </Form.Item>
           <Form.Item name="flat_ref_amount" label={t("org:rates.flatAmount")}>
-            <InputNumber min={0} addonAfter="SAR" />
+            <InputNumber min={0} addonAfter={t("common:common.currencyUnit")} />
           </Form.Item>
           <Form.Item name="incentive_pct" label={t("org:rates.incentivePct")}>
             <InputNumber min={0} max={100} addonAfter="%" />
