@@ -15,6 +15,7 @@ _HEADER_FONT = Font(bold=True)
 
 @dataclass(frozen=True)
 class PayoutRow:
+    department_id: int
     department_code: str
     department_name_en: str
     department_name_ar: str
@@ -23,6 +24,16 @@ class PayoutRow:
     full_name_ar: str
     evaluation_pct: Decimal
     final_amount: Decimal
+
+
+def group_by_department(rows: list[PayoutRow]) -> dict[int, list[PayoutRow]]:
+    """Shared aggregation grouping used by both this module's Excel export and
+    reports.service's JSON period summary, so the two don't independently
+    reimplement the same 'group by department' logic."""
+    by_dept: dict[int, list[PayoutRow]] = {}
+    for row in rows:
+        by_dept.setdefault(row.department_id, []).append(row)
+    return by_dept
 
 
 def _write_header(ws: Worksheet, headers: list[str]) -> None:
@@ -43,13 +54,12 @@ def build_finance_workbook(
     summary_ws.append([])
     _write_header(summary_ws, ["Department (EN)", "القسم", "Employees", "Total (SAR)"])
 
-    by_dept: dict[str, list[PayoutRow]] = {}
-    for row in rows:
-        by_dept.setdefault(row.department_code, []).append(row)
+    by_dept = group_by_department(rows)
+    dept_ids_by_code = sorted(by_dept, key=lambda dept_id: by_dept[dept_id][0].department_code)
 
     grand_total = Decimal(0)
-    for dept_code in sorted(by_dept):
-        dept_rows = by_dept[dept_code]
+    for dept_id in dept_ids_by_code:
+        dept_rows = by_dept[dept_id]
         dept_total = sum((r.final_amount for r in dept_rows), Decimal(0))
         grand_total += dept_total
         summary_ws.append(
@@ -64,9 +74,9 @@ def build_finance_workbook(
     for cell in summary_ws[summary_ws.max_row]:
         cell.font = _HEADER_FONT
 
-    for dept_code in sorted(by_dept):
-        dept_rows = by_dept[dept_code]
-        ws = wb.create_sheet(title=dept_code[:31])
+    for dept_id in dept_ids_by_code:
+        dept_rows = by_dept[dept_id]
+        ws = wb.create_sheet(title=dept_rows[0].department_code[:31])
         ws.sheet_view.rightToLeft = True
         _write_header(ws, ["Staff No", "Name (EN)", "الاسم", "Evaluation %", "Amount (SAR)"])
         for r in sorted(dept_rows, key=lambda x: x.staff_no):

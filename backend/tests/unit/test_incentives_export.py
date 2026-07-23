@@ -2,9 +2,12 @@ from decimal import Decimal
 
 from app.modules.incentives.export import PayoutRow, build_finance_workbook
 
+_DEPT_IDS = {"PROD": 1, "QC": 2}
+
 
 def _row(dept_code: str, dept_en: str, dept_ar: str, staff_no: str, amount: str) -> PayoutRow:
     return PayoutRow(
+        department_id=_DEPT_IDS[dept_code],
         department_code=dept_code,
         department_name_en=dept_en,
         department_name_ar=dept_ar,

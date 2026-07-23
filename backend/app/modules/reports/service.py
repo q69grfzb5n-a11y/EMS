@@ -5,16 +5,34 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.common.enums import EmploymentStatus, IncentiveRunStatus
+from app.common.enums import EmploymentStatus, IncentiveRunStatus, RoleCode
 from app.common.errors import bad_request
 from app.modules.attendance.service import get_period
-from app.modules.employees.models import Employee
+from app.modules.auth.models import User
+from app.modules.employees.models import Employee, EvaluationAssignment
 from app.modules.incentives import service as incentives_service
-from app.modules.incentives.export import PayoutRow
+from app.modules.incentives.export import PayoutRow, group_by_department
 from app.modules.incentives.models import IncentiveRun
 from app.modules.kpi_templates.models import KpiTemplateAssignment, KpiTemplateVersion
 from app.modules.reports.blank_template import CriterionSpec, RosterMember
 from app.modules.reports.schemas import DeptSummaryOut, PeriodSummaryOut
+
+# Roles in TemplateDownloaders with unrestricted visibility across every
+# department's roster; DEPT_MANAGER/REVIEWER are scoped below, mirroring how
+# both roles are scoped everywhere else (employees.service, evaluations.service).
+_ROSTER_FULL_ACCESS_ROLES = {
+    RoleCode.HR.value,
+    RoleCode.PMO.value,
+    RoleCode.ADMIN.value,
+    RoleCode.FACTORY_MANAGER.value,
+}
+
+
+def _actor_department_id(db: Session, actor: User) -> int | None:
+    if actor.employee_id is None:
+        return None
+    employee = db.get(Employee, actor.employee_id)
+    return employee.department_id if employee is not None else None
 
 
 @dataclass
@@ -28,20 +46,19 @@ class DeptTotal:
 
 
 def _dept_totals(run: IncentiveRun) -> list[DeptTotal]:
-    by_dept: dict[int, DeptTotal] = {}
-    for line in run.lines:
-        if line.is_excluded:
-            continue
-        dept = line.employee.department
-        totals = by_dept.setdefault(
-            dept.id,
-            DeptTotal(
-                department_id=dept.id, code=dept.code, name_en=dept.name_en, name_ar=dept.name_ar
-            ),
+    by_dept = group_by_department(build_payout_rows(run))
+    totals = [
+        DeptTotal(
+            department_id=dept_id,
+            code=dept_rows[0].department_code,
+            name_en=dept_rows[0].department_name_en,
+            name_ar=dept_rows[0].department_name_ar,
+            employee_count=len(dept_rows),
+            total_amount=sum((r.final_amount for r in dept_rows), Decimal(0)),
         )
-        totals.employee_count += 1
-        totals.total_amount += line.final_amount
-    return sorted(by_dept.values(), key=lambda d: d.code)
+        for dept_id, dept_rows in by_dept.items()
+    ]
+    return sorted(totals, key=lambda d: d.code)
 
 
 def get_period_summary(db: Session, period_id: int) -> PeriodSummaryOut:
@@ -96,6 +113,7 @@ def build_payout_rows(run: IncentiveRun) -> list[PayoutRow]:
         department = employee.department
         rows.append(
             PayoutRow(
+                department_id=department.id,
                 department_code=department.code,
                 department_name_en=department.name_en,
                 department_name_ar=department.name_ar,
@@ -128,7 +146,9 @@ def build_finance_pdf_context(db: Session, run: IncentiveRun) -> dict[str, objec
     }
 
 
-def list_roster_for_template(db: Session, template_id: int, *, as_of: date) -> list[Employee]:
+def list_roster_for_template(
+    db: Session, actor: User, template_id: int, *, as_of: date
+) -> list[Employee]:
     position_ids = [
         a.position_id
         for a in db.scalars(
@@ -150,7 +170,21 @@ def list_roster_for_template(db: Session, template_id: int, *, as_of: date) -> l
         )
         .order_by(Employee.staff_no)
     )
-    return list(db.scalars(stmt))
+
+    role_codes = set(actor.role_codes)
+    if _ROSTER_FULL_ACCESS_ROLES.intersection(role_codes):
+        return list(db.scalars(stmt))
+    if RoleCode.DEPT_MANAGER.value in role_codes:
+        dept_id = _actor_department_id(db, actor)
+        if dept_id is None:
+            return []
+        return list(db.scalars(stmt.where(Employee.department_id == dept_id)))
+    if RoleCode.REVIEWER.value in role_codes:
+        stmt = stmt.join(
+            EvaluationAssignment, EvaluationAssignment.employee_id == Employee.id
+        ).where(EvaluationAssignment.reviewer_user_id == actor.id)
+        return list(db.scalars(stmt))
+    return []
 
 
 def build_criteria_specs(version: KpiTemplateVersion) -> list[CriterionSpec]:

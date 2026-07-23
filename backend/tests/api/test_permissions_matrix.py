@@ -483,7 +483,7 @@ def build_matrix(fx: Fixture) -> list[EndpointCheck]:
         EndpointCheck("my incentives", "GET", "/incentive-runs/my/incentives", everyone),
         # ---- reports ------------------------------------------------------------
         EndpointCheck(
-            "period summary", "GET", f"/reports/periods/{fx.period.id}/summary", everyone
+            "period summary", "GET", f"/reports/periods/{fx.period.id}/summary", finance_readers
         ),
         EndpointCheck(
             "finance excel", "GET", f"/reports/runs/{fx.run_id}/finance-excel", finance_readers

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
 
+import openpyxl
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -383,3 +385,57 @@ def test_blank_template_forbidden_for_plain_employee(
     )
 
     assert resp.status_code == 403
+
+
+def _workbook_cell_values(content: bytes) -> set[str]:
+    workbook = openpyxl.load_workbook(BytesIO(content))
+    values: set[str] = set()
+    for sheet in workbook.worksheets:
+        for row in sheet.iter_rows():
+            for cell in row:
+                if cell.value is not None:
+                    values.add(str(cell.value))
+    return values
+
+
+def test_blank_excel_hides_roster_from_unrelated_dept_manager(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="10")
+    other_dept = Department(code="RD10B", name_en="Other Dept 10", name_ar="قسم آخر")
+    db_session.add(other_dept)
+    db_session.flush()
+    other_mgr_employee = Employee(
+        staff_no="RMGR10B",
+        full_name_ar="مدير آخر",
+        department_id=other_dept.id,
+        position_id=fx.position.id,
+    )
+    db_session.add(other_mgr_employee)
+    db_session.flush()
+    other_dept_manager = make_user(
+        db_session, "RDM10B", roles=["dept_manager"], employee_id=other_mgr_employee.id
+    )
+
+    resp = client.get(
+        f"/api/v1/reports/kpi-templates/{fx.version.id}/blank-excel",
+        headers=auth_headers(client, other_dept_manager.staff_no),
+    )
+
+    assert resp.status_code == 200
+    assert fx.employee.staff_no not in _workbook_cell_values(resp.content)
+
+
+def test_blank_excel_hides_roster_from_unassigned_reviewer(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="11")
+    unassigned_reviewer = make_user(db_session, "RREV11B", roles=["reviewer"])
+
+    resp = client.get(
+        f"/api/v1/reports/kpi-templates/{fx.version.id}/blank-excel",
+        headers=auth_headers(client, unassigned_reviewer.staff_no),
+    )
+
+    assert resp.status_code == 200
+    assert fx.employee.staff_no not in _workbook_cell_values(resp.content)

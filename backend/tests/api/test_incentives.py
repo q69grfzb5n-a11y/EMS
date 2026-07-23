@@ -443,6 +443,25 @@ def test_list_runs_scopes_lines_and_total_for_dept_manager(
     assert Decimal(listed2["total_final_amount"]) == Decimal(0)
 
 
+def test_dept_manager_with_no_linked_employee_is_forbidden_not_empty(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="11g")
+    run_id = create_run(client, fx).json()["id"]
+    unlinked_manager = make_user(db_session, "IDM11G", roles=["dept_manager"])
+
+    detail_resp = client.get(
+        f"/api/v1/incentive-runs/{run_id}", headers=auth_headers(client, unlinked_manager.staff_no)
+    )
+    assert detail_resp.status_code == 403
+
+    list_resp = client.get(
+        "/api/v1/incentive-runs", headers=auth_headers(client, unlinked_manager.staff_no)
+    )
+    assert list_resp.status_code == 200
+    assert all(r["id"] != run_id for r in list_resp.json())
+
+
 def test_full_access_role_sees_every_run_in_list(client: TestClient, db_session: Session) -> None:
     fx = build_fixture(db_session, suffix="11e")
     run = create_run(client, fx).json()
@@ -451,6 +470,26 @@ def test_full_access_role_sees_every_run_in_list(client: TestClient, db_session:
     assert resp.status_code == 200
     listed = next(r for r in resp.json() if r["id"] == run["id"])
     assert len(listed["lines"]) == 1
+
+
+def test_finance_role_has_full_access_matching_its_export_rights(
+    client: TestClient, db_session: Session
+) -> None:
+    fx = build_fixture(db_session, suffix="11f")
+    run = create_run(client, fx).json()
+    finance_user = make_user(db_session, "IFIN11F", roles=["finance"])
+
+    list_resp = client.get(
+        "/api/v1/incentive-runs", headers=auth_headers(client, finance_user.staff_no)
+    )
+    assert list_resp.status_code == 200
+    listed = next(r for r in list_resp.json() if r["id"] == run["id"])
+    assert len(listed["lines"]) == 1
+
+    detail_resp = client.get(
+        f"/api/v1/incentive-runs/{run['id']}", headers=auth_headers(client, finance_user.staff_no)
+    )
+    assert detail_resp.status_code == 200
 
 
 # ---- line editing (draft only) -----------------------------------------------

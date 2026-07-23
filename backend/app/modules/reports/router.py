@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
 from app.common.enums import RoleCode
-from app.core.deps import CurrentUser, DbSession, require_roles
+from app.core.deps import DbSession, require_roles
 from app.modules.attendance.service import get_period
 from app.modules.auth.models import User
 from app.modules.incentives.export import build_finance_workbook
@@ -42,8 +42,18 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 _XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
+def _attachment_response(content: bytes, *, media_type: str, filename: str) -> Response:
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/periods/{period_id}/summary", response_model=PeriodSummaryOut)
-def period_summary_endpoint(period_id: int, _user: CurrentUser, db: DbSession) -> PeriodSummaryOut:
+def period_summary_endpoint(
+    period_id: int, _actor: FinanceReaders, db: DbSession
+) -> PeriodSummaryOut:
     return service.get_period_summary(db, period_id)
 
 
@@ -58,11 +68,7 @@ def finance_excel_endpoint(run_id: int, _actor: FinanceReaders, db: DbSession) -
     buffer = io.BytesIO()
     workbook.save(buffer)
     filename = f"incentive_payout_run_{run.run_no}.xlsx"
-    return Response(
-        content=buffer.getvalue(),
-        media_type=_XLSX_MEDIA_TYPE,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return _attachment_response(buffer.getvalue(), media_type=_XLSX_MEDIA_TYPE, filename=filename)
 
 
 @router.get("/runs/{run_id}/finance-pdf")
@@ -71,17 +77,13 @@ def finance_pdf_endpoint(run_id: int, _actor: FinanceReaders, db: DbSession) -> 
     context = service.build_finance_pdf_context(db, run)
     pdf_bytes = render_pdf("finance_summary.html", context)
     filename = f"incentive_summary_run_{run.run_no}.pdf"
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return _attachment_response(pdf_bytes, media_type="application/pdf", filename=filename)
 
 
 @router.get("/kpi-templates/{version_id}/blank-excel")
-def blank_excel_endpoint(version_id: int, _actor: TemplateDownloaders, db: DbSession) -> Response:
+def blank_excel_endpoint(version_id: int, actor: TemplateDownloaders, db: DbSession) -> Response:
     version = get_version(db, version_id)
-    roster = service.list_roster_for_template(db, version.template_id, as_of=date.today())
+    roster = service.list_roster_for_template(db, actor, version.template_id, as_of=date.today())
     workbook = build_blank_evaluation_workbook(
         template_name_en=version.template.name_en,
         criteria=service.build_criteria_specs(version),
@@ -90,17 +92,13 @@ def blank_excel_endpoint(version_id: int, _actor: TemplateDownloaders, db: DbSes
     buffer = io.BytesIO()
     workbook.save(buffer)
     filename = f"blank_evaluation_{version.template.code}_v{version.version_no}.xlsx"
-    return Response(
-        content=buffer.getvalue(),
-        media_type=_XLSX_MEDIA_TYPE,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return _attachment_response(buffer.getvalue(), media_type=_XLSX_MEDIA_TYPE, filename=filename)
 
 
 @router.get("/kpi-templates/{version_id}/blank-pdf")
-def blank_pdf_endpoint(version_id: int, _actor: TemplateDownloaders, db: DbSession) -> Response:
+def blank_pdf_endpoint(version_id: int, actor: TemplateDownloaders, db: DbSession) -> Response:
     version = get_version(db, version_id)
-    roster = service.list_roster_for_template(db, version.template_id, as_of=date.today())
+    roster = service.list_roster_for_template(db, actor, version.template_id, as_of=date.today())
     context = {
         "template_name_ar": version.template.name_ar,
         "criteria": [
@@ -113,8 +111,4 @@ def blank_pdf_endpoint(version_id: int, _actor: TemplateDownloaders, db: DbSessi
     }
     pdf_bytes = render_pdf("blank_evaluation.html", context)
     filename = f"blank_evaluation_{version.template.code}_v{version.version_no}.pdf"
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return _attachment_response(pdf_bytes, media_type="application/pdf", filename=filename)

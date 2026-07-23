@@ -125,7 +125,7 @@ def create_run_endpoint(
 @router.get("/{run_id}", response_model=IncentiveRunOut)
 def get_run_endpoint(run_id: int, user: CurrentUser, db: DbSession) -> IncentiveRunOut:
     run = service.get_run(db, run_id)
-    lines = service.list_lines_scoped(db, user, run_id)
+    lines = service.scope_lines_or_forbidden(db, user, run)
     return _run_to_out(run, lines=lines)
 
 

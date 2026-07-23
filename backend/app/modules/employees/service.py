@@ -12,7 +12,9 @@ from app.modules.auth.models import User
 from app.modules.employees.models import Employee, EmployeeSalary, EvaluationAssignment
 from app.modules.org.service import get_department, get_position
 
-# Roles with unrestricted visibility across the whole roster.
+# Roles with unrestricted visibility across the whole roster. Includes FINANCE
+# (needed for payroll) even though evaluations/transfers deliberately exclude
+# it — see the comment on those modules' own FULL_ACCESS_ROLES.
 FULL_ACCESS_ROLES = {
     RoleCode.HR.value,
     RoleCode.ADMIN.value,

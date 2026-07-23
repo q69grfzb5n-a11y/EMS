@@ -28,7 +28,10 @@ from app.modules.evaluations.workflow import REGULAR_TRANSITIONS, SELF_APPRAISAL
 from app.modules.kpi_templates.models import KpiTemplateVersion
 from app.modules.kpi_templates.service import get_active_version, resolve_template_for_position
 
-# Roles with unrestricted visibility across every evaluation, mirrors employees.service.
+# Roles with unrestricted visibility across every evaluation. Deliberately
+# narrower than employees.service.FULL_ACCESS_ROLES: FINANCE has no business
+# reason to see performance-evaluation content, unlike the employee roster or
+# incentive payouts it's otherwise trusted with.
 FULL_ACCESS_ROLES = {
     RoleCode.HR.value,
     RoleCode.ADMIN.value,

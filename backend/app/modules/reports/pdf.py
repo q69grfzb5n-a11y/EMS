@@ -31,8 +31,13 @@ def _font_face_css() -> str:
     )
 
 
+# The font paths never change at runtime, so build this once at import time
+# rather than re-reading/re-formatting it on every single render_pdf() call.
+_FONT_FACE_CSS = _font_face_css()
+
+
 def render_pdf(template_name: str, context: dict[str, Any]) -> bytes:
     template = _env.get_template(template_name)
-    html_str = template.render(font_face_css=_font_face_css(), **context)
+    html_str = template.render(font_face_css=_FONT_FACE_CSS, **context)
     pdf_bytes: bytes = HTML(string=html_str, base_url=str(_TEMPLATES_DIR)).write_pdf()
     return pdf_bytes

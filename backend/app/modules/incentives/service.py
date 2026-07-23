@@ -29,12 +29,16 @@ from app.modules.incentives.models import IncentiveLineItem, IncentiveRun
 from app.modules.incentives.workflow import RUN_TRANSITIONS
 from app.modules.org.service import rate_as_of
 
-# Roles with unrestricted visibility across every run, mirrors evaluations/transfers.
+# Roles with unrestricted visibility across every run. Shares HR/ADMIN/PMO/
+# FACTORY_MANAGER with evaluations/transfers, plus FINANCE — who already has
+# export rights over this exact data via reports.router's FinanceReaders —
+# so they aren't scoped out of viewing/listing runs through the API instead.
 FULL_ACCESS_ROLES = {
     RoleCode.HR.value,
     RoleCode.ADMIN.value,
     RoleCode.PMO.value,
     RoleCode.FACTORY_MANAGER.value,
+    RoleCode.FINANCE.value,
 }
 # An evaluation counts toward a run once it has reached either kind's terminal
 # approved status (REGULAR ends at manager_approved, SELF_APPRAISAL at fm_approved).
@@ -76,7 +80,7 @@ def get_approved_run_for_period(db: Session, period_id: int) -> IncentiveRun | N
 
 
 def list_runs(db: Session, *, period_id: int | None = None) -> list[IncentiveRun]:
-    stmt = select(IncentiveRun).order_by(IncentiveRun.id.desc())
+    stmt = _run_query().order_by(IncentiveRun.id.desc())
     if period_id is not None:
         stmt = stmt.where(IncentiveRun.period_id == period_id)
     return list(db.scalars(stmt))
@@ -90,16 +94,26 @@ def _scope_lines(db: Session, actor: User, run: IncentiveRun) -> list[IncentiveL
         return run.lines
     if RoleCode.DEPT_MANAGER.value in role_codes:
         dept_id = _actor_department_id(db, actor)
+        if dept_id is None:
+            return None
         return [line for line in run.lines if line.employee.department_id == dept_id]
     return None
 
 
-def list_lines_scoped(db: Session, actor: User, run_id: int) -> list[IncentiveLineItem]:
-    run = get_run(db, run_id)
+def scope_lines_or_forbidden(
+    db: Session, actor: User, run: IncentiveRun
+) -> list[IncentiveLineItem]:
+    """Like _scope_lines, but for a caller that already has the run loaded —
+    avoids re-fetching it just to re-derive the same scoping decision."""
     lines = _scope_lines(db, actor, run)
     if lines is None:
         raise forbidden()
     return lines
+
+
+def list_lines_scoped(db: Session, actor: User, run_id: int) -> list[IncentiveLineItem]:
+    run = get_run(db, run_id)
+    return scope_lines_or_forbidden(db, actor, run)
 
 
 def list_runs_scoped(
