@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -17,6 +17,11 @@ class User(Base, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(String(255))
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Brute-force lockout: incremented on each failed login, reset to 0 on
+    # success. Once it reaches auth.service.MAX_FAILED_LOGIN_ATTEMPTS,
+    # locked_until is set and further logins are refused until it passes.
+    failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(nullable=True)
 
     user_roles: Mapped[list["UserRole"]] = relationship(
         back_populates="user", foreign_keys="UserRole.user_id", cascade="all, delete-orphan"

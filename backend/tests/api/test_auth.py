@@ -3,6 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
+from app.modules.auth import router as auth_router
+from app.modules.auth import service as auth_service
 from app.modules.auth.models import Role, User, UserRole
 
 PASSWORD = "InitialPass1"
@@ -72,6 +74,54 @@ def test_login_unknown_staff_no_401(client: TestClient) -> None:
     assert resp.status_code == 401
 
 
+def test_login_rate_limited_after_too_many_attempts_from_one_source(
+    client: TestClient, db_session: Session
+) -> None:
+    make_user(db_session, "1008", roles=["employee"])
+
+    for _ in range(auth_router.LOGIN_RATE_LIMIT_MAX):
+        login(client, "1008")
+
+    limited = login(client, "1008")
+    assert limited.status_code == 429
+    assert limited.json()["error"]["code"] == "login_rate_limited"
+
+
+def test_repeated_failed_logins_lock_the_account(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "1006", roles=["employee"])
+
+    for _ in range(auth_service.MAX_FAILED_LOGIN_ATTEMPTS - 1):
+        resp = login(client, "1006", password="wrong-password")
+        assert resp.status_code == 401
+        assert resp.json()["error"]["code"] == "invalid_credentials"
+
+    locking_attempt = login(client, "1006", password="wrong-password")
+    assert locking_attempt.status_code == 401
+    assert locking_attempt.json()["error"]["code"] == "account_locked"
+
+    # Even the CORRECT password is refused while locked.
+    still_locked = login(client, "1006")
+    assert still_locked.status_code == 401
+    assert still_locked.json()["error"]["code"] == "account_locked"
+
+
+def test_successful_login_resets_the_failed_attempt_counter(
+    client: TestClient, db_session: Session
+) -> None:
+    make_user(db_session, "1007", roles=["employee"])
+
+    for _ in range(auth_service.MAX_FAILED_LOGIN_ATTEMPTS - 1):
+        login(client, "1007", password="wrong-password")
+
+    ok = login(client, "1007")
+    assert ok.status_code == 200
+
+    user = db_session.scalars(select(User).where(User.staff_no == "1007")).first()
+    assert user is not None
+    assert user.failed_login_attempts == 0
+    assert user.locked_until is None
+
+
 def test_me_requires_auth(client: TestClient) -> None:
     resp = client.get("/api/v1/auth/me")
     assert resp.status_code == 401
@@ -111,6 +161,33 @@ def test_change_password_flow(client: TestClient, db_session: Session) -> None:
     relogin = login(client, "1004", password="BrandNewPass1")
     assert relogin.status_code == 200
     assert relogin.json()["must_change_password"] is False
+
+
+def test_must_change_password_blocks_other_endpoints_server_side(
+    client: TestClient, db_session: Session
+) -> None:
+    make_user(db_session, "1005", roles=["employee"], must_change_password=True)
+    token = login(client, "1005").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # A direct API call (not the browser UI) with a valid token must still be
+    # blocked from any endpoint other than the two needed to escape the gate.
+    blocked = client.get("/api/v1/roles", headers=headers)
+    assert blocked.status_code == 403
+    assert blocked.json()["error"]["code"] == "password_change_required"
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 200
+
+    changed = client.post(
+        "/api/v1/auth/change-password",
+        headers=headers,
+        json={"current_password": PASSWORD, "new_password": "BrandNewPass2"},
+    )
+    assert changed.status_code == 204
+
+    now_allowed = client.get("/api/v1/roles", headers=headers)
+    assert now_allowed.status_code == 200
 
 
 def test_refresh_rotation_revokes_old_token(client: TestClient, db_session: Session) -> None:

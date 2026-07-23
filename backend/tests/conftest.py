@@ -16,6 +16,7 @@ import app.modules.kpi_templates.models  # noqa: F401
 import app.modules.org.models  # noqa: F401
 import app.modules.transfers.models  # noqa: F401
 from app.core.config import get_settings
+from app.core.rate_limit import reset_rate_limits
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -127,5 +128,9 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+    # The login rate limiter is in-process global state (see core/rate_limit.py) —
+    # every TestClient shares the same source "IP", so it must be reset per test
+    # or tests that hit /auth/login repeatedly would spuriously rate-limit each other.
+    reset_rate_limits()
     yield TestClient(app)
     app.dependency_overrides.clear()

@@ -511,11 +511,16 @@ def build_matrix(fx: Fixture) -> list[EndpointCheck]:
 def test_permissions_matrix(client: TestClient, db_session: Session) -> None:
     fx = build_fixture(db_session)
     checks = build_matrix(fx)
+    # Cache one token per role rather than logging in again for every single
+    # check — each role's staff_no is fixed for the whole sweep, so re-authing
+    # ~51 times per role is pure redundant work (and would trip the login
+    # rate limiter, which is by design tight enough to slow real brute force).
+    headers_by_role = {role: auth_headers(client, fx.users[role].staff_no) for role in ALL_ROLES}
 
     failures: list[str] = []
     for check in checks:
         for role in ALL_ROLES:
-            headers = auth_headers(client, fx.users[role].staff_no)
+            headers = headers_by_role[role]
             resp = client.request(
                 check.method, f"/api/v1{check.path}", headers=headers, json=check.json_body
             )

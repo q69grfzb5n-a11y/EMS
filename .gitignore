@@ -30,3 +30,6 @@ Thumbs.db
 backups/
 *.tmp
 ~$*
+
+# TLS certs (self-signed dev certs or real prod certs — never commit either)
+certs/

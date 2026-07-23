@@ -30,3 +30,9 @@ def bad_request(
     message: str = "Bad request", code: str = "bad_request", details: Any = None
 ) -> AppError:
     return AppError(400, code, message, details)
+
+
+def too_many_requests(
+    message: str = "Too many requests", code: str = "too_many_requests"
+) -> AppError:
+    return AppError(429, code, message)

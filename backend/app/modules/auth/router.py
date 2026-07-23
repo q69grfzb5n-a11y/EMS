@@ -3,9 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 
 from app.common.enums import RoleCode
-from app.common.errors import unauthorized
+from app.common.errors import too_many_requests, unauthorized
 from app.core.config import get_settings
 from app.core.deps import CurrentUser, DbSession, require_roles
+from app.core.rate_limit import check_rate_limit, get_client_ip
 from app.modules.auth import service
 from app.modules.auth.models import User
 from app.modules.auth.schemas import (
@@ -30,6 +31,13 @@ REFRESH_COOKIE_PATH = "/api/v1/auth"
 
 AdminOrHR = Annotated[User, Depends(require_roles(RoleCode.ADMIN, RoleCode.HR))]
 HROnly = Annotated[User, Depends(require_roles(RoleCode.HR))]
+
+# Defense-in-depth alongside the per-account lockout in auth.service: this
+# limits login attempts per SOURCE IP, so an attacker enumerating many
+# different staff numbers from one machine gets slowed down even though each
+# individual account's own 5-attempt lockout hasn't triggered yet.
+LOGIN_RATE_LIMIT_MAX = 20
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = 300.0
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -59,7 +67,20 @@ def _user_to_out(user: User) -> UserOut:
 
 
 @auth_router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, response: Response, db: DbSession) -> TokenResponse:
+def login(
+    payload: LoginRequest, request: Request, response: Response, db: DbSession
+) -> TokenResponse:
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(
+        f"login:{client_ip}",
+        max_requests=LOGIN_RATE_LIMIT_MAX,
+        window_seconds=LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+    ):
+        raise too_many_requests(
+            "Too many login attempts from this address. Try again later.",
+            code="login_rate_limited",
+        )
+
     user = service.authenticate(db, payload.staff_no, payload.password)
     access_token, plain_refresh = service.issue_tokens(db, user)
     _set_refresh_cookie(response, plain_refresh)

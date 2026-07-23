@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Annotated
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -14,8 +14,18 @@ from app.modules.auth.models import User
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
+# The only two endpoints a must-change-password account may still call — every
+# other CurrentUser-gated endpoint is blocked below. This is enforced here
+# (server-side) rather than relying on the frontend's redirect, which only
+# stops a browser UI, not a direct API call with a valid token.
+_PASSWORD_CHANGE_EXEMPT_PATHS = {
+    "/api/v1/auth/me",
+    "/api/v1/auth/change-password",
+}
+
 
 def get_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
@@ -31,6 +41,11 @@ def get_current_user(
     user = db.get(User, user_id)
     if user is None or not user.is_active:
         raise unauthorized("Invalid or expired token")
+
+    if user.must_change_password and request.url.path not in _PASSWORD_CHANGE_EXEMPT_PATHS:
+        raise forbidden(
+            "Password change required before continuing", code="password_change_required"
+        )
 
     return user
 

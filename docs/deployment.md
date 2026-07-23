@@ -93,3 +93,60 @@ docker compose up --build
   seeding (`backend/scripts/seed.py --core`, `backend/scripts/import_legacy.py`)
   is always a separate, explicit step — never automatic — so a production
   restart never silently re-seeds or re-imports real data.
+
+## Security hardening
+
+**Rehearsed 2026-07-23** end-to-end against a fresh isolated prod-profile
+stack (own Postgres volume, real generated secrets, `APP_ENV=prod`) — see
+PROGRESS.md for the full live transcript. What's in place:
+
+- **TLS**: nginx terminates HTTPS on 443; plain port 80 only ever returns a
+  301 redirect to HTTPS, nothing is served over it. `scripts/generate_dev_tls_cert.sh`
+  generates a self-signed cert for local testing under `certs/` (gitignored) —
+  **for a real deployment, replace `certs/localhost.{crt,key}` with a real
+  certificate** (e.g. Let's Encrypt); `nginx.conf` doesn't need to change,
+  only the files it points at.
+- **Security headers**: HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, and a `Content-Security-Policy`
+  (`script-src 'self'`, no inline scripts — the old inline lang/dir bootstrap
+  script was moved to `public/set-lang.js` specifically so this could be
+  strict) are set both by nginx (static responses) and by the backend's own
+  middleware (`app/main.py`, for the API's own responses reached directly).
+- **Account lockout**: `users.failed_login_attempts`/`locked_until` — 5
+  consecutive wrong passwords locks the account for 15 minutes
+  (`app/modules/auth/service.py`'s `MAX_FAILED_LOGIN_ATTEMPTS`/`LOCKOUT_DURATION`).
+  The correct password is refused too while locked, and successful login
+  resets the counter.
+- **Per-IP login rate limiting**: `app/core/rate_limit.py`, in-process
+  sliding window (20 attempts / 5 minutes), defense-in-depth alongside
+  account lockout against enumeration across many staff numbers from one
+  source. Reads the real client IP from nginx's `X-Real-IP` header (see
+  `get_client_ip()`) rather than `request.client.host`, which would
+  otherwise always resolve to nginx's own container IP and rate-limit every
+  real user globally instead of per-client — caught live during this
+  rehearsal, not by an automated test.
+- **`must_change_password` is enforced server-side**, not just by the
+  frontend's redirect — a direct API call with a valid token for an account
+  that hasn't changed its password yet gets 403 `password_change_required`
+  from every endpoint except `/auth/me` and `/auth/change-password`
+  (`app/core/deps.py::get_current_user`).
+- **Fail-fast on insecure prod secrets**: `app/core/config.py`'s
+  `Settings` refuses to start with `APP_ENV=prod` if `SECRET_KEY` is still
+  the `.env.example` placeholder (or under 32 chars) or `DATABASE_URL` still
+  contains the default `change-me` password — an operator who forgets to
+  rotate these gets a startup crash with a clear message, not a silently
+  forgeable JWT signing key.
+- **Structured logging**: JSON lines to stdout (`app/core/logging.py`),
+  method/path/status/duration/client-IP only — never request bodies,
+  headers, or query strings, so a password or token can never end up in the
+  logs. Per-action history (who changed what) is the existing `audit_log`
+  table's job, not this.
+- **Automated daily backups**: the `backup` service in `docker-compose.yml`
+  (postgres:16-alpine image, `scripts/backup_loop.sh`) dumps to `./backups`
+  on a schedule (`BACKUP_INTERVAL_SECONDS`, default daily) with retention
+  pruning (`BACKUP_RETENTION_DAYS`, default 14) — connects to postgres
+  directly over the compose network, no docker socket needed. The manual
+  `scripts/backup_db.sh`/`.ps1` + `restore_db.sh`/`.ps1` (rehearsed in Phase
+  9) still exist for on-demand backups and restores.
+- **CI dependency scanning**: a `dependency-audit` job runs `pip-audit`
+  (backend) and `npm audit --audit-level=high` (frontend) on every push/PR.

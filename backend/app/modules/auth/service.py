@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload
@@ -13,6 +13,9 @@ from app.core.security import (
     verify_password,
 )
 from app.modules.auth.models import RefreshToken, Role, User, UserRole
+
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = timedelta(minutes=15)
 
 
 def _user_with_roles_query() -> Select[tuple[User]]:
@@ -29,10 +32,34 @@ def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.scalars(stmt).first()
 
 
+_INVALID_CREDENTIALS_MESSAGE = "Invalid staff number or password"
+_ACCOUNT_LOCKED_MESSAGE = (
+    "Account temporarily locked after repeated failed logins. Try again later."
+)
+
+
 def authenticate(db: Session, staff_no: str, password: str) -> User:
     user = get_user_by_staff_no(db, staff_no)
-    if user is None or not user.is_active or not verify_password(password, user.password_hash):
-        raise unauthorized("Invalid staff number or password", code="invalid_credentials")
+    if user is None or not user.is_active:
+        raise unauthorized(_INVALID_CREDENTIALS_MESSAGE, code="invalid_credentials")
+
+    now = datetime.now(UTC)
+    if user.locked_until is not None and user.locked_until.replace(tzinfo=UTC) > now:
+        raise unauthorized(_ACCOUNT_LOCKED_MESSAGE, code="account_locked")
+
+    if not verify_password(password, user.password_hash):
+        user.failed_login_attempts += 1
+        locked_now = user.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS
+        if locked_now:
+            user.locked_until = now + LOCKOUT_DURATION
+        db.commit()
+        if locked_now:
+            raise unauthorized(_ACCOUNT_LOCKED_MESSAGE, code="account_locked")
+        raise unauthorized(_INVALID_CREDENTIALS_MESSAGE, code="invalid_credentials")
+
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    db.commit()
     return user
 
 

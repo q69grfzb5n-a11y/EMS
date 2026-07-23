@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.common.errors import AppError
+from app.core.logging import RequestLoggingMiddleware, configure_logging
 from app.db.session import SessionLocal
 from app.modules.approvals.router import router as approvals_router
 from app.modules.attendance.router import router as attendance_router
@@ -51,8 +52,30 @@ def _sanitize_errors(errors: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     return sanitized
 
 
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+}
+
+
 def create_app() -> FastAPI:
+    configure_logging()
     app = FastAPI(title="EMS API")
+    app.add_middleware(RequestLoggingMiddleware)
+
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next: Any) -> Any:
+        response = await call_next(request)
+        for name, value in _SECURITY_HEADERS.items():
+            response.headers[name] = value
+        # nginx terminates TLS and forwards this header; only advertise HSTS
+        # over a connection that was actually HTTPS end-to-end.
+        if request.headers.get("x-forwarded-proto") == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
+
     app.include_router(api_router)
 
     @app.exception_handler(AppError)
