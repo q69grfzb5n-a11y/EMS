@@ -12,16 +12,21 @@ from app.modules.auth.models import User
 from app.modules.employees.models import Employee, EmployeeSalary, EvaluationAssignment
 from app.modules.org.service import get_department, get_position
 
-# Roles with unrestricted visibility across the whole roster. Includes FINANCE
-# (needed for payroll) even though evaluations/transfers deliberately exclude
-# it — see the comment on those modules' own FULL_ACCESS_ROLES.
-FULL_ACCESS_ROLES = {
+# Org-wide oversight roles: these are defined by having no department, so a
+# department assignment can never narrow them.
+ORG_WIDE_ROLES = {
     RoleCode.HR.value,
     RoleCode.ADMIN.value,
     RoleCode.PMO.value,
     RoleCode.FACTORY_MANAGER.value,
-    RoleCode.FINANCE.value,
 }
+# FINANCE also needs the whole roster for payroll — but only as a *fallback*.
+# An explicit DEPT_MANAGER assignment is a deliberate statement about scope,
+# so it takes precedence (see _scoping_department_id): a user who is both a
+# department manager and finance sees their own department, not all 440.
+# Finance's actual payroll reach is governed separately by SALARY_READ_ROLES
+# and the incentives module, so narrowing the roster here costs them nothing.
+FULL_ACCESS_ROLES = ORG_WIDE_ROLES | {RoleCode.FINANCE.value}
 # Salary is confidential even from most roles that can see the roster itself.
 SALARY_READ_ROLES = {RoleCode.HR.value, RoleCode.FINANCE.value, RoleCode.PMO.value}
 
@@ -57,12 +62,26 @@ def get_reviewer_assignment(db: Session, employee_id: int) -> EvaluationAssignme
     return db.scalars(stmt).first()
 
 
+def _scoping_department_id(db: Session, user: User, role_codes: set[str]) -> int | None:
+    """The department this user's roster view should be limited to, or None
+    for no department limit. A DEPT_MANAGER assignment narrows even a role
+    that would otherwise see everything (FINANCE) — being made manager of a
+    department is an explicit statement of scope. Org-wide oversight roles
+    (HR/ADMIN/PMO/FACTORY_MANAGER) are never narrowed."""
+    if ORG_WIDE_ROLES.intersection(role_codes):
+        return None
+    if RoleCode.DEPT_MANAGER.value in role_codes:
+        return _own_department_id(db, user)
+    return None
+
+
 def can_view_employee(db: Session, user: User, employee: Employee) -> bool:
     role_codes = set(user.role_codes)
+
+    if RoleCode.DEPT_MANAGER.value in role_codes and not ORG_WIDE_ROLES.intersection(role_codes):
+        return employee.department_id == _own_department_id(db, user)
     if FULL_ACCESS_ROLES.intersection(role_codes):
         return True
-    if RoleCode.DEPT_MANAGER.value in role_codes:
-        return employee.department_id == _own_department_id(db, user)
     if RoleCode.REVIEWER.value in role_codes:
         assignment = get_reviewer_assignment(db, employee.id)
         return assignment is not None and assignment.reviewer_user_id == user.id
@@ -73,14 +92,14 @@ def list_employees_scoped(db: Session, user: User) -> list[Employee]:
     role_codes = set(user.role_codes)
     stmt = _employee_query().order_by(Employee.staff_no)
 
-    if FULL_ACCESS_ROLES.intersection(role_codes):
-        return list(db.scalars(stmt))
-
-    if RoleCode.DEPT_MANAGER.value in role_codes:
-        dept_id = _own_department_id(db, user)
+    if RoleCode.DEPT_MANAGER.value in role_codes and not ORG_WIDE_ROLES.intersection(role_codes):
+        dept_id = _scoping_department_id(db, user, role_codes)
         if dept_id is None:
             return []
         return list(db.scalars(stmt.where(Employee.department_id == dept_id)))
+
+    if FULL_ACCESS_ROLES.intersection(role_codes):
+        return list(db.scalars(stmt))
 
     if RoleCode.REVIEWER.value in role_codes:
         stmt = stmt.join(

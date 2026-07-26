@@ -61,7 +61,21 @@ export function ReportsPage() {
       />
 
       {periodId !== null && summary && !hasApprovedRun && (
-        <Alert type="info" showIcon message={t("reports:noApprovedRun")} />
+        <Alert
+          type="info"
+          showIcon
+          message={
+            summary.run_id
+              ? t("reports:runNotApprovedYet", {
+                  status: t(`incentives:status.${summary.run_status}`, {
+                    ns: "incentives",
+                    defaultValue: summary.run_status ?? "",
+                  }),
+                })
+              : t("reports:noApprovedRun")
+          }
+          description={summary.run_id ? undefined : t("reports:noApprovedRunHow")}
+        />
       )}
 
       {periodId !== null && summary && (

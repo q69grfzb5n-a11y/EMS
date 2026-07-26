@@ -430,3 +430,47 @@ def test_dept_manager_sees_real_team_once_linked(client: TestClient, db_session:
     assert resp.status_code == 200
     staff_nos = {e["staff_no"] for e in resp.json()}
     assert {"MGR4012", "TEAM4012"} <= staff_nos
+
+
+def test_create_user_auto_links_employee_with_matching_staff_no(
+    client: TestClient, db_session: Session
+) -> None:
+    """The staff number is the same person's real identity in both tables, so
+    creating a login for an existing employee should link them automatically —
+    without it, every new dept_manager/reviewer starts with no department and
+    silently sees nothing."""
+    dept = Department(code="DL1", name_en="Link Dept", name_ar="قسم")
+    position = Position(code="lpos1", title_en="Pos", title_ar="وظيفة")
+    db_session.add_all([dept, position])
+    db_session.flush()
+    employee = Employee(
+        staff_no="A7001", full_name_ar="اسم", department_id=dept.id, position_id=position.id
+    )
+    db_session.add(employee)
+    db_session.commit()
+
+    make_user(db_session, "1101", roles=["hr"])
+    resp = client.post(
+        "/api/v1/users",
+        headers={"Authorization": f"Bearer {login(client, '1101').json()['access_token']}"},
+        json={"staff_no": "A7001", "password": "BrandNewPass1"},
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["employee_id"] == employee.id
+    assert resp.json()["employee_staff_no"] == "A7001"
+
+
+def test_create_user_without_matching_employee_is_unlinked(
+    client: TestClient, db_session: Session
+) -> None:
+    make_user(db_session, "1102", roles=["hr"])
+
+    resp = client.post(
+        "/api/v1/users",
+        headers={"Authorization": f"Bearer {login(client, '1102').json()['access_token']}"},
+        json={"staff_no": "NOSUCHEMP", "password": "BrandNewPass1"},
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["employee_id"] is None

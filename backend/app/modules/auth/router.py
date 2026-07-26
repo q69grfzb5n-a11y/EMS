@@ -158,7 +158,9 @@ def list_users_endpoint(_actor: AdminOrHR, db: DbSession) -> list[UserOut]:
 @users_router.post("", response_model=UserOut, status_code=201)
 def create_user_endpoint(payload: UserCreateRequest, actor: AdminOrHR, db: DbSession) -> UserOut:
     user = service.create_user(db, actor, payload.staff_no, payload.password)
-    return _user_to_out(user)
+    # Resolve the employee too: creation now auto-links by staff number, so
+    # returning the bare user would hide the link the caller just got.
+    return _user_to_out_with_employee(db, user)
 
 
 @users_router.patch("/{user_id}", response_model=UserOut)

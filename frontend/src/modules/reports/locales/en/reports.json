@@ -3,6 +3,8 @@
   "periodSummary": "Period Summary",
   "grandTotal": "Grand Total (SAR)",
   "noApprovedRun": "This period has no approved incentive run yet — nothing to export.",
+  "noApprovedRunHow": "To produce one: 1) assign a KPI template to the relevant positions, 2) create and approve evaluations for the period under My Team, 3) create an incentive run under Incentives, then submit it for audit and approve it. Exports unlock once a run reaches Approved.",
+  "runNotApprovedYet": "A run exists for this period but is still {{status}}. Finish its approval under Incentives to unlock exports.",
   "downloadExcel": "Download Finance Excel",
   "downloadPdf": "Download PDF Summary",
   "downloadFailed": "Could not download the file."

@@ -134,15 +134,34 @@ def list_users(db: Session) -> list[User]:
     return list(db.scalars(_user_with_roles_query().order_by(User.staff_no)))
 
 
+def find_linkable_employee(db: Session, staff_no: str) -> Employee | None:
+    """An employee whose staff number matches this login's, and who isn't
+    already linked to a different account. The staff number IS the person's
+    real identity in both tables, so matching on it is the natural link."""
+    employee = db.scalars(select(Employee).where(Employee.staff_no == staff_no)).first()
+    if employee is None:
+        return None
+    already_linked = db.scalars(select(User).where(User.employee_id == employee.id)).first()
+    return None if already_linked is not None else employee
+
+
 def create_user(db: Session, actor: User, staff_no: str, password: str) -> User:
     if get_user_by_staff_no(db, staff_no) is not None:
         raise conflict("A user with this staff number already exists", code="staff_no_taken")
+
+    # Auto-link by staff number. Without this, every new login started life
+    # with no employee record attached, so anything that depends on "which
+    # employee is this person" (a dept manager's own department, a reviewer's
+    # assignments, "my incentives") silently resolved to nothing — the exact
+    # reason a newly-created dept_manager saw an empty or unscoped team.
+    employee = find_linkable_employee(db, staff_no)
 
     user = User(
         staff_no=staff_no,
         password_hash=hash_password(password),
         must_change_password=True,
         is_active=True,
+        employee_id=employee.id if employee else None,
     )
     db.add(user)
     db.flush()
@@ -152,7 +171,7 @@ def create_user(db: Session, actor: User, staff_no: str, password: str) -> User:
         action="create_user",
         entity_type="user",
         entity_id=user.id,
-        after={"staff_no": staff_no},
+        after={"staff_no": staff_no, "employee_id": user.employee_id},
     )
     db.commit()
     return get_user_by_id(db, user.id)  # type: ignore[return-value]

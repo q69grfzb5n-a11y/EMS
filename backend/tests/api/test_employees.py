@@ -269,3 +269,64 @@ def test_assign_reviewer_forbidden_for_non_hr(client: TestClient, db_session: Se
     )
 
     assert resp.status_code == 403
+
+
+def test_dept_manager_with_finance_role_still_sees_only_own_department(
+    client: TestClient, db_session: Session
+) -> None:
+    """A DEPT_MANAGER assignment is an explicit statement of scope, so it must
+    win over FINANCE's general full-roster grant — otherwise adding the finance
+    role to a department manager silently widens them to the whole company."""
+    dept_a, dept_b, position = make_org(db_session)
+    mine = make_employee(db_session, "E600", dept_a, position)
+    make_employee(db_session, "E601", dept_b, position)
+    manager_employee = make_employee(db_session, "E602", dept_a, position)
+    db_session.commit()
+    make_user(
+        db_session,
+        "6100",
+        roles=["dept_manager", "finance"],
+        employee_id=manager_employee.id,
+    )
+
+    resp = client.get("/api/v1/employees", headers=auth_headers(client, "6100"))
+
+    assert resp.status_code == 200
+    seen = {e["staff_no"] for e in resp.json()}
+    assert seen == {mine.staff_no, manager_employee.staff_no}
+    assert "E601" not in seen
+
+
+def test_finance_without_dept_manager_still_sees_whole_roster(
+    client: TestClient, db_session: Session
+) -> None:
+    """Narrowing above must not break a plain finance user, who genuinely
+    needs the full roster for payroll."""
+    dept_a, dept_b, position = make_org(db_session)
+    make_employee(db_session, "E610", dept_a, position)
+    make_employee(db_session, "E611", dept_b, position)
+    db_session.commit()
+    make_user(db_session, "6101", roles=["finance"])
+
+    resp = client.get("/api/v1/employees", headers=auth_headers(client, "6101"))
+
+    assert resp.status_code == 200
+    seen = {e["staff_no"] for e in resp.json()}
+    assert {"E610", "E611"}.issubset(seen)
+
+
+def test_hr_dept_manager_is_not_narrowed(client: TestClient, db_session: Session) -> None:
+    """HR/ADMIN/PMO/FACTORY_MANAGER are org-wide by definition — a department
+    link must never shrink them."""
+    dept_a, dept_b, position = make_org(db_session)
+    make_employee(db_session, "E620", dept_a, position)
+    make_employee(db_session, "E621", dept_b, position)
+    manager_employee = make_employee(db_session, "E622", dept_a, position)
+    db_session.commit()
+    make_user(db_session, "6102", roles=["dept_manager", "hr"], employee_id=manager_employee.id)
+
+    resp = client.get("/api/v1/employees", headers=auth_headers(client, "6102"))
+
+    assert resp.status_code == 200
+    seen = {e["staff_no"] for e in resp.json()}
+    assert {"E620", "E621", "E622"}.issubset(seen)
