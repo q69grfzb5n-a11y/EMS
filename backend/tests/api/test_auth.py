@@ -6,6 +6,8 @@ from app.core.security import hash_password
 from app.modules.auth import router as auth_router
 from app.modules.auth import service as auth_service
 from app.modules.auth.models import Role, User, UserRole
+from app.modules.employees.models import Employee
+from app.modules.org.models import Department, Position
 
 PASSWORD = "InitialPass1"
 
@@ -297,3 +299,134 @@ def test_audit_log_written_on_role_assignment(client: TestClient, db_session: Se
     assert len(rows) == 1
     assert rows[0].actor_user_id == hr.id
     assert rows[0].entity_id == str(target.id)
+
+
+def _make_employee(db_session: Session, staff_no: str) -> Employee:
+    dept = Department(code=f"D{staff_no}", name_en="Dept", name_ar="قسم")
+    position = Position(code=f"pos{staff_no}", title_en="Pos", title_ar="وظيفة")
+    db_session.add_all([dept, position])
+    db_session.flush()
+    employee = Employee(
+        staff_no=staff_no, full_name_ar="اسم الموظف", department_id=dept.id, position_id=position.id
+    )
+    db_session.add(employee)
+    db_session.flush()
+    return employee
+
+
+def test_link_employee_forbidden_for_admin(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "4001", roles=["admin"])
+    target = make_user(db_session, "4002", roles=["dept_manager"])
+    employee = _make_employee(db_session, "E4001")
+    token = login(client, "4001").json()["access_token"]
+
+    resp = client.put(
+        f"/api/v1/users/{target.id}/employee",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"employee_id": employee.id},
+    )
+
+    assert resp.status_code == 403
+
+
+def test_link_employee_allowed_for_hr(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "4003", roles=["hr"])
+    target = make_user(db_session, "4004", roles=["dept_manager"])
+    employee = _make_employee(db_session, "E4003")
+    token = login(client, "4003").json()["access_token"]
+
+    resp = client.put(
+        f"/api/v1/users/{target.id}/employee",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"employee_id": employee.id},
+    )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["employee_id"] == employee.id
+    assert body["employee_staff_no"] == "E4003"
+
+
+def test_link_employee_404_for_unknown_employee(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "4005", roles=["hr"])
+    target = make_user(db_session, "4006", roles=["dept_manager"])
+    token = login(client, "4005").json()["access_token"]
+
+    resp = client.put(
+        f"/api/v1/users/{target.id}/employee",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"employee_id": 999999},
+    )
+
+    assert resp.status_code == 404
+
+
+def test_link_employee_conflict_when_already_linked_to_another_user(
+    client: TestClient, db_session: Session
+) -> None:
+    make_user(db_session, "4007", roles=["hr"])
+    first = make_user(db_session, "4008", roles=["dept_manager"])
+    second = make_user(db_session, "4009", roles=["dept_manager"])
+    employee = _make_employee(db_session, "E4007")
+    token = login(client, "4007").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    ok = client.put(
+        f"/api/v1/users/{first.id}/employee", headers=headers, json={"employee_id": employee.id}
+    )
+    assert ok.status_code == 200
+
+    conflict = client.put(
+        f"/api/v1/users/{second.id}/employee", headers=headers, json={"employee_id": employee.id}
+    )
+    assert conflict.status_code == 409
+    assert conflict.json()["error"]["code"] == "employee_already_linked"
+
+
+def test_link_employee_can_unlink_with_null(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "4010", roles=["hr"])
+    target = make_user(db_session, "4011", roles=["dept_manager"])
+    employee = _make_employee(db_session, "E4010")
+    token = login(client, "4010").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    client.put(
+        f"/api/v1/users/{target.id}/employee", headers=headers, json={"employee_id": employee.id}
+    )
+
+    resp = client.put(
+        f"/api/v1/users/{target.id}/employee", headers=headers, json={"employee_id": None}
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["employee_id"] is None
+
+
+def test_dept_manager_sees_real_team_once_linked(client: TestClient, db_session: Session) -> None:
+    make_user(db_session, "4012", roles=["hr"])
+    manager_employee = _make_employee(db_session, "MGR4012")
+    manager_user = make_user(db_session, "4013", roles=["dept_manager"])
+    teammate = Employee(
+        staff_no="TEAM4012",
+        full_name_ar="زميل",
+        department_id=manager_employee.department_id,
+        position_id=manager_employee.position_id,
+    )
+    db_session.add(teammate)
+    db_session.commit()
+
+    hr_token = login(client, "4012").json()["access_token"]
+    client.put(
+        f"/api/v1/users/{manager_user.id}/employee",
+        headers={"Authorization": f"Bearer {hr_token}"},
+        json={"employee_id": manager_employee.id},
+    )
+
+    manager_token = login(client, "4013").json()["access_token"]
+    resp = client.get(
+        "/api/v1/employees", headers={"Authorization": f"Bearer {manager_token}"}
+    )
+
+    assert resp.status_code == 200
+    staff_nos = {e["staff_no"] for e in resp.json()}
+    assert {"MGR4012", "TEAM4012"} <= staff_nos

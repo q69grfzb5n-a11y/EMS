@@ -53,3 +53,8 @@ export async function listRoles(): Promise<RoleOut[]> {
   const { data } = await apiClient.get<RoleOut[]>("/roles");
   return data;
 }
+
+export async function linkEmployee(userId: number, employee_id: number | null): Promise<UserOut> {
+  const { data } = await apiClient.put<UserOut>(`/users/${userId}/employee`, { employee_id });
+  return data;
+}

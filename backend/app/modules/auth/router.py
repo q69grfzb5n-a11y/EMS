@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
+from sqlalchemy import select
 
 from app.common.enums import RoleCode
 from app.common.errors import too_many_requests, unauthorized
@@ -12,6 +13,7 @@ from app.modules.auth.models import User
 from app.modules.auth.schemas import (
     AssignRolesRequest,
     ChangePasswordRequest,
+    LinkEmployeeRequest,
     LoginRequest,
     MeResponse,
     ResetPasswordRequest,
@@ -21,6 +23,7 @@ from app.modules.auth.schemas import (
     UserOut,
     UserPatchRequest,
 )
+from app.modules.employees.models import Employee
 
 settings = get_settings()
 
@@ -56,14 +59,38 @@ def _set_refresh_cookie(response: Response, plain_refresh_token: str) -> None:
     )
 
 
-def _user_to_out(user: User) -> UserOut:
+def _user_to_out(user: User, employee: Employee | None = None) -> UserOut:
     return UserOut(
         id=user.id,
         staff_no=user.staff_no,
         is_active=user.is_active,
         must_change_password=user.must_change_password,
         roles=sorted(user.role_codes),
+        employee_id=user.employee_id,
+        employee_staff_no=employee.staff_no if employee else None,
+        employee_name_en=employee.full_name_en if employee else None,
+        employee_name_ar=employee.full_name_ar if employee else None,
     )
+
+
+def _users_to_out(db: DbSession, users: list[User]) -> list[UserOut]:
+    """Batch-fetches the linked Employee rows in one query instead of one
+    lookup per user, since the users list endpoint returns every account."""
+    employee_ids = {u.employee_id for u in users if u.employee_id is not None}
+    employees_by_id = (
+        {e.id: e for e in db.scalars(select(Employee).where(Employee.id.in_(employee_ids)))}
+        if employee_ids
+        else {}
+    )
+    return [
+        _user_to_out(u, employees_by_id.get(u.employee_id) if u.employee_id else None)
+        for u in users
+    ]
+
+
+def _user_to_out_with_employee(db: DbSession, user: User) -> UserOut:
+    employee = db.get(Employee, user.employee_id) if user.employee_id is not None else None
+    return _user_to_out(user, employee)
 
 
 @auth_router.post("/login", response_model=TokenResponse)
@@ -125,7 +152,7 @@ def change_password_endpoint(
 
 @users_router.get("", response_model=list[UserOut])
 def list_users_endpoint(_actor: AdminOrHR, db: DbSession) -> list[UserOut]:
-    return [_user_to_out(u) for u in service.list_users(db)]
+    return _users_to_out(db, service.list_users(db))
 
 
 @users_router.post("", response_model=UserOut, status_code=201)
@@ -139,7 +166,7 @@ def patch_user_endpoint(
     user_id: int, payload: UserPatchRequest, actor: AdminOrHR, db: DbSession
 ) -> UserOut:
     user = service.patch_user(db, actor, user_id, payload.is_active)
-    return _user_to_out(user)
+    return _user_to_out_with_employee(db, user)
 
 
 @users_router.put("/{user_id}/roles", response_model=UserOut)
@@ -147,7 +174,7 @@ def assign_roles_endpoint(
     user_id: int, payload: AssignRolesRequest, actor: HROnly, db: DbSession
 ) -> UserOut:
     user = service.assign_roles(db, actor, user_id, payload.role_codes)
-    return _user_to_out(user)
+    return _user_to_out_with_employee(db, user)
 
 
 @users_router.post("/{user_id}/reset-password", response_model=UserOut)
@@ -155,7 +182,15 @@ def reset_password_endpoint(
     user_id: int, payload: ResetPasswordRequest, actor: HROnly, db: DbSession
 ) -> UserOut:
     user = service.reset_password(db, actor, user_id, payload.new_password)
-    return _user_to_out(user)
+    return _user_to_out_with_employee(db, user)
+
+
+@users_router.put("/{user_id}/employee", response_model=UserOut)
+def link_employee_endpoint(
+    user_id: int, payload: LinkEmployeeRequest, actor: HROnly, db: DbSession
+) -> UserOut:
+    user = service.link_employee(db, actor, user_id, payload.employee_id)
+    return _user_to_out_with_employee(db, user)
 
 
 @roles_router.get("", response_model=list[RoleOut])

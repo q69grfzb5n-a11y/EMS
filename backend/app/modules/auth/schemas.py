@@ -39,6 +39,10 @@ class UserOut(BaseModel):
     is_active: bool
     must_change_password: bool
     roles: list[str]
+    employee_id: int | None = None
+    employee_staff_no: str | None = None
+    employee_name_en: str | None = None
+    employee_name_ar: str | None = None
 
 
 class RoleOut(BaseModel):
@@ -54,3 +58,7 @@ class AssignRolesRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     new_password: str = Field(min_length=8)
+
+
+class LinkEmployeeRequest(BaseModel):
+    employee_id: int | None

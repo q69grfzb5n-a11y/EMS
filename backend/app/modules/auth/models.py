@@ -1,6 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -8,6 +18,18 @@ from app.db.base import Base, TimestampMixin
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
+    __table_args__ = (
+        # An employee should only ever be the "real person" behind one login.
+        # Partial (not a plain unique column) so any number of users can
+        # still have employee_id = NULL — most roles have no employee link at
+        # all (finance, plain admin accounts, etc).
+        Index(
+            "uq_users_employee_id",
+            "employee_id",
+            unique=True,
+            postgresql_where=text("employee_id IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     staff_no: Mapped[str] = mapped_column(String(20), unique=True, index=True)

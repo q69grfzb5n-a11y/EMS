@@ -17,6 +17,10 @@ export interface UserOut {
   is_active: boolean;
   must_change_password: boolean;
   roles: string[];
+  employee_id: number | null;
+  employee_staff_no: string | null;
+  employee_name_en: string | null;
+  employee_name_ar: string | null;
 }
 
 export interface RoleOut {

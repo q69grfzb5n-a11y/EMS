@@ -13,6 +13,7 @@ from app.core.security import (
     verify_password,
 )
 from app.modules.auth.models import RefreshToken, Role, User, UserRole
+from app.modules.employees.models import Employee
 
 MAX_FAILED_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
@@ -176,6 +177,45 @@ def patch_user(db: Session, actor: User, user_id: int, is_active: bool | None) -
     )
     db.commit()
     return user
+
+
+def link_employee(db: Session, actor: User, user_id: int, employee_id: int | None) -> User:
+    """Links (or unlinks, if employee_id is None) this login to an employee
+    record — the only thing that makes role-scoped visibility (a dept
+    manager's own department, a reviewer's own assignments, "my incentives",
+    etc.) resolve to anything at all. There was previously no way to do this
+    through the API; it required a direct database write every time it came
+    up in a live demo or test."""
+    user = get_user_by_id(db, user_id)
+    if user is None:
+        raise not_found("User not found")
+
+    if employee_id is not None:
+        employee = db.get(Employee, employee_id)
+        if employee is None:
+            raise not_found("Employee not found")
+        already_linked_to = db.scalars(
+            select(User).where(User.employee_id == employee_id, User.id != user_id)
+        ).first()
+        if already_linked_to is not None:
+            raise conflict(
+                f"This employee is already linked to user {already_linked_to.staff_no}",
+                code="employee_already_linked",
+            )
+
+    before = {"employee_id": user.employee_id}
+    user.employee_id = employee_id
+    write_audit(
+        db,
+        actor_user_id=actor.id,
+        action="link_employee",
+        entity_type="user",
+        entity_id=user.id,
+        before=before,
+        after={"employee_id": employee_id},
+    )
+    db.commit()
+    return get_user_by_id(db, user.id)  # type: ignore[return-value]
 
 
 def assign_roles(db: Session, actor: User, user_id: int, role_codes: list[str]) -> User:

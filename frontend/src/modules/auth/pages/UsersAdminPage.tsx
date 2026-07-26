@@ -5,6 +5,7 @@ import {
   Form,
   Input,
   Modal,
+  Select,
   Space,
   Table,
   Tag,
@@ -17,14 +18,18 @@ import { useTranslation } from "react-i18next";
 import {
   assignRoles,
   createUser,
+  linkEmployee,
   listRoles,
   listUsers,
   patchUser,
   resetPassword,
 } from "@/modules/auth/api/authApi";
 import type { RoleOut, UserOut } from "@/modules/auth/types";
+import { listEmployees } from "@/modules/employees/api/employeesApi";
 import { Can } from "@/shared/auth/Can";
 import { useAuthStore } from "@/shared/auth/authStore";
+import { useLocalizedField } from "@/shared/hooks/useLocalizedField";
+import { Ltr } from "@/shared/ui/Ltr";
 import { LTR_INPUT_STYLES } from "@/shared/ui/ltrInput";
 import { hasPermission } from "@/shared/auth/permissions";
 import { extractApiErrorCode } from "@/shared/utils/apiError";
@@ -40,6 +45,7 @@ export function UsersAdminPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [rolesModalUser, setRolesModalUser] = useState<UserOut | null>(null);
   const [resetModalUser, setResetModalUser] = useState<UserOut | null>(null);
+  const [linkModalUser, setLinkModalUser] = useState<UserOut | null>(null);
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ["users"] });
 
@@ -85,6 +91,17 @@ export function UsersAdminPage() {
     onError: showError,
   });
 
+  const linkEmployeeMutation = useMutation({
+    mutationFn: ({ userId, employeeId }: { userId: number; employeeId: number | null }) =>
+      linkEmployee(userId, employeeId),
+    onSuccess: () => {
+      void message.success(t("auth:users.linkEmployeeSuccess"));
+      setLinkModalUser(null);
+      void invalidateUsers();
+    },
+    onError: showError,
+  });
+
   const columns = [
     { title: t("auth:users.staffNo"), dataIndex: "staff_no" },
     {
@@ -108,16 +125,33 @@ export function UsersAdminPage() {
       ),
     },
     {
+      title: t("auth:users.employee"),
+      key: "employee",
+      render: (_: unknown, user: UserOut) =>
+        user.employee_staff_no ? (
+          <span>
+            <Ltr>{user.employee_staff_no}</Ltr>
+            {" — "}
+            <bdi>{user.employee_name_en ?? user.employee_name_ar}</bdi>
+          </span>
+        ) : (
+          <Typography.Text type="secondary">{t("auth:users.notLinked")}</Typography.Text>
+        ),
+    },
+    {
       title: t("auth:users.actions"),
       key: "actions",
       render: (_: unknown, user: UserOut) => (
-        <Space>
+        <Space wrap>
           <Can permission="MANAGE_ROLES">
             <Button size="small" onClick={() => setRolesModalUser(user)}>
               {t("auth:users.assignRoles")}
             </Button>
             <Button size="small" onClick={() => setResetModalUser(user)}>
               {t("auth:users.resetPassword")}
+            </Button>
+            <Button size="small" onClick={() => setLinkModalUser(user)}>
+              {t("auth:users.linkEmployee")}
             </Button>
           </Can>
           <Button
@@ -286,6 +320,17 @@ export function UsersAdminPage() {
         </Modal>
       )}
 
+      {linkModalUser && (
+        <LinkEmployeeModal
+          user={linkModalUser}
+          onCancel={() => setLinkModalUser(null)}
+          onSubmit={(employeeId) =>
+            linkEmployeeMutation.mutate({ userId: linkModalUser.id, employeeId })
+          }
+          submitting={linkEmployeeMutation.isPending}
+        />
+      )}
+
       {!isHR && null}
     </div>
   );
@@ -328,6 +373,45 @@ function AssignRolesModal({
           </Checkbox>
         ))}
       </Checkbox.Group>
+    </Modal>
+  );
+}
+
+interface LinkEmployeeModalProps {
+  user: UserOut;
+  onCancel: () => void;
+  onSubmit: (employeeId: number | null) => void;
+  submitting: boolean;
+}
+
+function LinkEmployeeModal({ user, onCancel, onSubmit, submitting }: LinkEmployeeModalProps) {
+  const { t } = useTranslation(["common", "auth"]);
+  const localized = useLocalizedField();
+  const employeesQuery = useQuery({ queryKey: ["employees"], queryFn: listEmployees });
+  const [selected, setSelected] = useState<number | null>(user.employee_id);
+
+  return (
+    <Modal
+      title={`${t("auth:users.linkEmployee")} — ${user.staff_no}`}
+      open
+      onCancel={onCancel}
+      onOk={() => onSubmit(selected)}
+      confirmLoading={submitting}
+    >
+      <Select
+        style={{ width: "100%" }}
+        showSearch
+        allowClear
+        loading={employeesQuery.isLoading}
+        placeholder={t("auth:users.selectEmployee")}
+        value={selected ?? undefined}
+        onChange={(value: number | undefined) => setSelected(value ?? null)}
+        optionFilterProp="label"
+        options={(employeesQuery.data ?? []).map((e) => ({
+          value: e.id,
+          label: `${e.staff_no} — ${localized(e.full_name_en, e.full_name_ar)}`,
+        }))}
+      />
     </Modal>
   );
 }

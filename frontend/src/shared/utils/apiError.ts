@@ -7,6 +7,7 @@ const KNOWN_ERROR_CODES = new Set([
   "account_locked",
   "login_rate_limited",
   "password_change_required",
+  "employee_already_linked",
 ]);
 
 /**
