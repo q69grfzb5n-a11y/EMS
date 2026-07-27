@@ -663,19 +663,26 @@ def test_only_one_run_can_reach_approved_per_period(
     pmo_headers = auth_headers(client, fx.pmo.staff_no)
     fm_headers = auth_headers(client, fx.fm.staff_no)
 
-    def approve_new_run() -> int:
+    # Both drafts are created up front, while the period is still open: once
+    # one is approved the period locks and create_run refuses outright (see
+    # test_cannot_create_a_run_on_a_period_locked_by_an_approved_run). Two
+    # competing drafts predating any approval is the realistic way this race
+    # actually arises, and it still exercises the database-level
+    # one-approved-run-per-period guarantee that backs the service check.
+    def advance_to_fm_approval() -> int:
         rid = create_run(client, fx).json()["id"]
         client.post(f"/api/v1/incentive-runs/{rid}/submit-audit", headers=hr_headers, json={})
         client.post(f"/api/v1/incentive-runs/{rid}/complete-audit", headers=pmo_headers, json={})
         return rid
 
-    first_run_id = approve_new_run()
+    first_run_id = advance_to_fm_approval()
+    second_run_id = advance_to_fm_approval()
+
     first_approved = client.post(
         f"/api/v1/incentive-runs/{first_run_id}/approve", headers=fm_headers, json={}
     )
     assert first_approved.status_code == 200
 
-    second_run_id = approve_new_run()
     second_approved = client.post(
         f"/api/v1/incentive-runs/{second_run_id}/approve", headers=fm_headers, json={}
     )
@@ -821,3 +828,40 @@ def test_service_get_history_404_for_missing_run(db_session: Session) -> None:
         raise AssertionError("expected not_found")
     except AppError as exc:
         assert exc.status_code == 404
+
+
+def test_cannot_create_a_run_on_a_period_locked_by_an_approved_run(
+    client: TestClient, db_session: Session
+) -> None:
+    """Approving a run locks its period. Creating another run on that period
+    used to be allowed, and the new run could even be pushed through
+    submit-audit and complete-audit before finally being rejected at approve
+    by the one-approved-run-per-period index — leaving convincing draft runs
+    that could never be approved, discovered only after all the work. Refuse
+    at creation instead."""
+    fx = build_fixture(db_session, suffix="LOCKRUN")
+    hr_headers = auth_headers(client, fx.hr.staff_no)
+    run_id = create_run(client, fx).json()["id"]
+
+    client.post(f"/api/v1/incentive-runs/{run_id}/submit-audit", headers=hr_headers, json={})
+    client.post(
+        f"/api/v1/incentive-runs/{run_id}/complete-audit",
+        headers=auth_headers(client, fx.pmo.staff_no),
+        json={},
+    )
+    approved = client.post(
+        f"/api/v1/incentive-runs/{run_id}/approve",
+        headers=auth_headers(client, fx.fm.staff_no),
+        json={},
+    )
+    assert approved.status_code == 200
+
+    period = client.get(
+        f"/api/v1/attendance/periods/{fx.period.id}", headers=hr_headers
+    ).json()
+    assert period["status"] == "locked"
+
+    blocked = create_run(client, fx)
+
+    assert blocked.status_code == 409
+    assert blocked.json()["error"]["code"] == "period_locked"

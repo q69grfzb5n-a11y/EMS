@@ -250,6 +250,19 @@ def create_run(
         raise bad_request("Unknown formula mode", code="invalid_formula_mode")
 
     period = get_period(db, period_id)
+    # A period is locked the moment one of its runs is approved. Creating
+    # another run on it was previously allowed: the new run could even be
+    # pushed through submit-audit and complete-audit, only to be rejected at
+    # the very last step by the one-approved-run-per-period database
+    # constraint. The payout was never at risk, but the user was left with
+    # convincing-looking draft runs that could never be approved, and only
+    # discovered it after doing all the work. Refuse at creation instead.
+    if period.status == PeriodStatus.LOCKED.value:
+        raise conflict(
+            "This period is locked by an approved incentive run; no further runs "
+            "can be created for it",
+            code="period_locked",
+        )
     if period.target_pool is None or period.actual_pool is None:
         raise bad_request(
             "Set the period's target and actual pool figures before creating a run",
