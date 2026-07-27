@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import Select, and_, or_, select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, aliased, selectinload
 
 from app.common.audit import write_audit
 from app.common.enums import (
@@ -18,7 +18,7 @@ from app.common.models import ApprovalAction
 from app.common.workflow import TransitionTable, apply_transition, transition_history
 from app.modules.attendance.models import AttendanceRecord, AttendanceZeroFlag, IncentivePeriod
 from app.modules.attendance.service import get_period
-from app.modules.auth.models import User
+from app.modules.auth.models import Role, User, UserRole
 from app.modules.employees.models import Employee
 from app.modules.employees.service import get_employee, get_reviewer_assignment
 from app.modules.evaluations.models import Evaluation, EvaluationScore
@@ -165,12 +165,43 @@ def get_history(db: Session, evaluation_id: int) -> list[ApprovalAction]:
     return transition_history(db, entity_type="evaluation", entity_id=evaluation_id)
 
 
+def _department_manager_user_id(db: Session, department_id: int) -> int | None:
+    """The dept_manager whose own employee record sits in this department.
+    Departments have no manager column; the relationship is expressed by
+    linking a dept_manager login to an employee, which is the same fact all
+    department scoping already reads (see employees.service)."""
+    manager_employee = aliased(Employee)
+    stmt = (
+        select(User.id)
+        .join(UserRole, UserRole.user_id == User.id)
+        .join(Role, Role.id == UserRole.role_id)
+        .join(manager_employee, manager_employee.id == User.employee_id)
+        .where(
+            Role.code == RoleCode.DEPT_MANAGER.value,
+            manager_employee.department_id == department_id,
+            User.is_active.is_(True),
+        )
+        .order_by(User.id)
+    )
+    return db.scalars(stmt).first()
+
+
 def _resolve_owner_user_id(db: Session, employee: Employee, kind: str) -> int | None:
     if kind == EvaluationKind.SELF_APPRAISAL.value:
         user = db.scalars(select(User).where(User.employee_id == employee.id)).first()
         return user.id if user is not None else None
+
     assignment = get_reviewer_assignment(db, employee.id)
-    return assignment.reviewer_user_id if assignment is not None else None
+    if assignment is not None:
+        return assignment.reviewer_user_id
+
+    # Fall back to the employee's department manager. Without this, every one
+    # of the ~440 employees needs an individually-assigned reviewer before a
+    # single evaluation can be created — so a fresh deployment reports
+    # "no_owner_resolved" for the entire roster and the whole incentive chain
+    # (evaluations -> run lines -> finance export) silently produces nothing.
+    # An explicit assignment still wins, so this only supplies the default.
+    return _department_manager_user_id(db, employee.department_id)
 
 
 def _period_covers(

@@ -474,3 +474,55 @@ def test_create_user_without_matching_employee_is_unlinked(
 
     assert resp.status_code == 201
     assert resp.json()["employee_id"] is None
+
+
+def test_backfill_links_existing_unlinked_users_by_staff_no(db_session: Session) -> None:
+    """Accounts created before auto-linking existed (or made directly in the
+    database) must still become linked — an unlinked dept_manager silently
+    resolves to no department at all."""
+    dept = Department(code="DL2", name_en="Backfill Dept", name_ar="قسم")
+    position = Position(code="lpos2", title_en="Pos", title_ar="وظيفة")
+    db_session.add_all([dept, position])
+    db_session.flush()
+    employee = Employee(
+        staff_no="B8001", full_name_ar="اسم", department_id=dept.id, position_id=position.id
+    )
+    db_session.add(employee)
+    db_session.flush()
+
+    matching = make_user(db_session, "B8001", roles=["dept_manager"])
+    unmatched = make_user(db_session, "NOEMP9", roles=["hr"])
+    assert matching.employee_id is None
+
+    linked = auth_service.backfill_employee_links(db_session)
+
+    db_session.refresh(matching)
+    db_session.refresh(unmatched)
+    assert linked >= 1
+    assert matching.employee_id == employee.id
+    # A login with no matching employee stays unlinked rather than guessing.
+    assert unmatched.employee_id is None
+
+
+def test_backfill_never_steals_an_already_linked_employee(db_session: Session) -> None:
+    dept = Department(code="DL3", name_en="Backfill Dept 3", name_ar="قسم")
+    position = Position(code="lpos3", title_en="Pos", title_ar="وظيفة")
+    db_session.add_all([dept, position])
+    db_session.flush()
+    employee = Employee(
+        staff_no="B8002", full_name_ar="اسم", department_id=dept.id, position_id=position.id
+    )
+    db_session.add(employee)
+    db_session.flush()
+
+    owner = make_user(db_session, "OWNER2", roles=["employee"])
+    owner.employee_id = employee.id
+    db_session.commit()
+    contender = make_user(db_session, "B8002", roles=["employee"])
+
+    auth_service.backfill_employee_links(db_session)
+
+    db_session.refresh(owner)
+    db_session.refresh(contender)
+    assert owner.employee_id == employee.id
+    assert contender.employee_id is None

@@ -37,10 +37,18 @@ import { extractApiErrorCode } from "@/shared/utils/apiError";
 export function UsersAdminPage() {
   const { t } = useTranslation(["common", "auth"]);
   const queryClient = useQueryClient();
+  const localized = useLocalizedField();
   const isHR = useAuthStore((state) => hasPermission(state.user?.roles ?? [], "MANAGE_ROLES"));
 
   const usersQuery = useQuery({ queryKey: ["users"], queryFn: listUsers });
   const rolesQuery = useQuery({ queryKey: ["roles"], queryFn: listRoles });
+
+  // The API returns a user's roles as bare codes ("dept_manager"), but the
+  // roles endpoint already carries their real bilingual names — without this
+  // lookup an Arabic user sees raw English identifiers in the roles column.
+  const roleNameByCode = new Map(
+    (rolesQuery.data ?? []).map((r) => [r.code, localized(r.name_en, r.name_ar)]),
+  );
 
   const [createOpen, setCreateOpen] = useState(false);
   const [rolesModalUser, setRolesModalUser] = useState<UserOut | null>(null);
@@ -110,7 +118,9 @@ export function UsersAdminPage() {
       render: (roles: string[]) => (
         <Space wrap>
           {roles.map((role) => (
-            <Tag key={role}>{role}</Tag>
+            // Fall back to the raw code if the roles list hasn't loaded yet,
+            // so the column is never blank while that query is in flight.
+            <Tag key={role}>{roleNameByCode.get(role) ?? role}</Tag>
           ))}
         </Space>
       ),
@@ -132,7 +142,7 @@ export function UsersAdminPage() {
           <span>
             <Ltr>{user.employee_staff_no}</Ltr>
             {" — "}
-            <bdi>{user.employee_name_en ?? user.employee_name_ar}</bdi>
+            <bdi>{localized(user.employee_name_en, user.employee_name_ar ?? "")}</bdi>
           </span>
         ) : (
           <Typography.Text type="secondary">{t("auth:users.notLinked")}</Typography.Text>
@@ -352,6 +362,7 @@ function AssignRolesModal({
   submitting,
 }: AssignRolesModalProps) {
   const { t } = useTranslation("auth");
+  const localized = useLocalizedField();
   const [selected, setSelected] = useState<string[]>(user.roles);
 
   return (
@@ -369,7 +380,7 @@ function AssignRolesModal({
       >
         {roles.map((role) => (
           <Checkbox key={role.code} value={role.code}>
-            {role.name_en} / {role.name_ar}
+            {localized(role.name_en, role.name_ar)}
           </Checkbox>
         ))}
       </Checkbox.Group>

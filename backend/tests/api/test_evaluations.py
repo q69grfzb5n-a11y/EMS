@@ -581,12 +581,19 @@ def test_self_appraisal_pmo_cannot_be_bypassed_by_reviewer_role(
 def test_bulk_create_skips_employees_without_a_reviewer_and_reports_why(
     client: TestClient, db_session: Session
 ) -> None:
+    """An employee with neither an explicit reviewer nor a department manager
+    to fall back on must still be reported with a reason, never silently
+    dropped. Uses a second department that deliberately has no manager, since
+    the fixture's own department does have one (which now supplies the
+    fallback owner)."""
     fx = build_fixture(db_session, suffix="15")
-    # a second employee in the same dept/position with NO reviewer assignment
+    managerless_dept = Department(code="D15NOMGR", name_en="No Manager", name_ar="بلا مدير")
+    db_session.add(managerless_dept)
+    db_session.flush()
     unassigned = Employee(
         staff_no="UNASSIGNED15",
         full_name_ar="بدون مقيم",
-        department_id=fx.dept.id,
+        department_id=managerless_dept.id,
         position_id=fx.position.id,
     )
     db_session.add(unassigned)
@@ -597,13 +604,16 @@ def test_bulk_create_skips_employees_without_a_reviewer_and_reports_why(
     resp = client.post(
         "/api/v1/evaluations/bulk",
         headers=headers,
-        json={"department_id": fx.dept.id, "period_id": fx.period.id, "kind": "regular"},
+        json={
+            "department_id": managerless_dept.id,
+            "period_id": fx.period.id,
+            "kind": "regular",
+        },
     )
 
     assert resp.status_code == 201
     body = resp.json()
-    created_employee_ids = {c["employee"]["id"] for c in body["created"]}
-    assert fx.employee.id in created_employee_ids
+    assert body["created"] == []
     skipped_ids = {s["employee_id"]: s["reason"] for s in body["skipped"]}
     assert skipped_ids[unassigned.id] == "no_owner_resolved"
 
@@ -752,3 +762,33 @@ def test_self_service_cannot_create_duplicate_self_appraisal(
     )
     assert second.status_code == 409
     assert second.json()["error"]["code"] == "already_exists"
+
+
+def test_bulk_create_uses_explicit_reviewer_and_falls_back_to_dept_manager(
+    client: TestClient, db_session: Session
+) -> None:
+    """Two behaviours in one pass, because the fixture already contains both
+    cases: the main employee has an explicit reviewer assignment, while the
+    manager's own employee record has none.
+
+    The fallback matters because without it every one of ~440 employees needs
+    an individually-assigned reviewer before a single evaluation can exist, so
+    a fresh deployment reports no_owner_resolved for the whole roster and the
+    entire incentive chain (evaluations -> run lines -> finance export)
+    silently produces nothing."""
+    fx = build_fixture(db_session, suffix="DMF")
+    db_session.commit()
+
+    resp = client.post(
+        "/api/v1/evaluations/bulk",
+        headers=auth_headers(client, fx.hr.staff_no),
+        json={"department_id": fx.dept.id, "period_id": fx.period.id},
+    )
+
+    assert resp.status_code == 201
+    owners = {e["employee"]["staff_no"]: e["owner_user_id"] for e in resp.json()["created"]}
+
+    # Explicit assignment wins for the employee that has one.
+    assert owners[fx.employee.staff_no] == fx.reviewer.id
+    # The manager's own record has no assignment, so it falls back to them.
+    assert owners["MGRDMF"] == fx.dept_manager.id

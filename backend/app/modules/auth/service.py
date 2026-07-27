@@ -198,6 +198,25 @@ def patch_user(db: Session, actor: User, user_id: int, is_active: bool | None) -
     return user
 
 
+def backfill_employee_links(db: Session) -> int:
+    """Links every still-unlinked login to the employee sharing its staff
+    number. `create_user` does this for new accounts, but accounts made before
+    that existed (or created directly in the database) stay unlinked, and an
+    unlinked dept_manager/reviewer silently resolves to no department at all.
+    Idempotent: only touches users with employee_id IS NULL, and skips any
+    employee already claimed by another account. Returns how many it linked."""
+    unlinked = db.scalars(select(User).where(User.employee_id.is_(None))).all()
+    linked = 0
+    for user in unlinked:
+        employee = find_linkable_employee(db, user.staff_no)
+        if employee is not None:
+            user.employee_id = employee.id
+            linked += 1
+    if linked:
+        db.commit()
+    return linked
+
+
 def link_employee(db: Session, actor: User, user_id: int, employee_id: int | None) -> User:
     """Links (or unlinks, if employee_id is None) this login to an employee
     record — the only thing that makes role-scoped visibility (a dept
