@@ -15,6 +15,9 @@ RUN npm run build
 
 # --- prod target: static assets served by nginx ---
 FROM nginx:alpine AS prod
+# openssl is not in nginx:alpine and is needed by entrypoint.sh to self-provision
+# a certificate when none has been mounted — see the comment there.
+RUN apk add --no-cache openssl
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /entrypoint.sh

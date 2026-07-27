@@ -20,4 +20,28 @@ else
     sed -i "s|__HSTS_HEADER__||g" /etc/nginx/conf.d/default.conf
 fi
 
+# Self-provision a TLS certificate when none is present.
+#
+# certs/ is gitignored (it holds private keys), so a fresh clone has none. This
+# used to mean nginx died on startup with a raw OpenSSL "cannot load
+# certificate" error and sat in a restart loop — the site simply never came up,
+# and the only clue was buried in `docker logs`. Requiring a manual script run
+# before the very first `docker compose up` was a poor default: nothing
+# enforced it, and skipping it failed obscurely.
+#
+# A real deployment bind-mounts real certificates over this path, in which case
+# the files already exist and this block does nothing.
+CERT_DIR=/etc/nginx/certs
+if [ ! -f "$CERT_DIR/localhost.crt" ] || [ ! -f "$CERT_DIR/localhost.key" ]; then
+    echo "No TLS certificate found in $CERT_DIR — generating a self-signed one."
+    echo "Replace it with a real certificate for any non-local deployment."
+    mkdir -p "$CERT_DIR"
+    openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+        -keyout "$CERT_DIR/localhost.key" \
+        -out "$CERT_DIR/localhost.crt" \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" 2>/dev/null
+    echo "Self-signed certificate generated (valid 365 days, CN=localhost)."
+fi
+
 exec "$@"

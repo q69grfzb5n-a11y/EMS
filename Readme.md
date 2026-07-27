@@ -17,9 +17,8 @@ Web application replacing the Excel-based employee incentive tracking tool at SH
 ## Run it
 
 ```bash
-cp .env.example .env                      # then set SECRET_KEY and POSTGRES_PASSWORD
-bash scripts/generate_dev_tls_cert.sh     # local TLS certificate
-docker compose up -d --build              # https://localhost
+cp .env.example .env          # then set SECRET_KEY and POSTGRES_PASSWORD
+docker compose up -d --build  # https://localhost
 ```
 
 Then load the data and sign in — see [RUNNING.md](RUNNING.md) for the full

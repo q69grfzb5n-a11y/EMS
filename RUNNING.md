@@ -49,16 +49,20 @@ openssl rand -hex 32
 ```
 
 ```bash
-# 2. Generate a local TLS certificate (self-signed, for local use only)
-bash scripts/generate_dev_tls_cert.sh
-
-# 3. Build and start everything
+# 2. Build and start everything
 docker compose up -d --build
 
-# 4. Watch it come up
+# 3. Watch it come up
 docker compose ps
 docker compose logs -f backend
 ```
+
+**No certificate step is needed.** On first start the frontend container
+generates a self-signed certificate into `certs/` if none is there, and reuses
+it afterwards. For a real deployment, put real certificates at
+`certs/localhost.crt` and `certs/localhost.key` before starting and the
+container will leave them alone. (`scripts/generate_dev_tls_cert.sh` still
+exists if you prefer to create one on the host explicitly.)
 
 Database migrations run automatically on backend startup — there is no separate
 migrate step.
@@ -249,10 +253,34 @@ For this reason HSTS is **off by default** and must be opted into with
 `ENABLE_HSTS=1` in `.env`. Only enable it behind a real domain with a real
 certificate.
 
-### `ERR_CONNECTION_REFUSED`
+### `ERR_CONNECTION_REFUSED`, or the site never loads
 
-Docker is not running, or the containers are stopped. Check with
-`docker compose ps`; start Docker Desktop if the daemon is down.
+Check the containers first — the frontend restarting in a loop looks identical
+to the server being down:
+
+```bash
+docker compose ps
+docker compose logs frontend
+```
+
+Common causes:
+
+- **Docker is not running.** Start Docker Desktop.
+- **Port 80 or 443 is already taken** by another web server (IIS, Skype, an
+  existing nginx). The error is `port is already allocated`. Fix by remapping
+  in `docker-compose.yml`:
+  ```yaml
+  frontend:
+    ports:
+      - "8080:80"
+      - "8443:443"
+  ```
+  then also set `HTTPS_PORT_SUFFIX=:8443` in `.env` so the HTTP→HTTPS redirect
+  targets the right port, and browse to `https://localhost:8443`.
+- **`cannot load certificate`** in the frontend logs. This should no longer
+  happen — the container self-provisions one — but if `certs/` exists on the
+  host containing an unreadable or partial file, delete the directory and
+  restart: `rm -rf certs && docker compose up -d`.
 
 ### A department manager sees no team, or the wrong one
 
