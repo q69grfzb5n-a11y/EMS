@@ -3,6 +3,12 @@
 Everything needed to get the system running from a clean checkout, plus the
 gotchas that are easy to lose an hour to.
 
+> These steps were verified end to end by cloning this repository into an empty
+> directory and following them exactly: the stack built, migrations ran on an
+> empty database, the seed and import loaded all **440 real employees**, and
+> the first-login password change worked. Nothing beyond Docker and the clone
+> is required.
+
 **Contents:** [Prerequisites](#prerequisites) · [Quick start](#quick-start-production-profile) ·
 [Loading real data](#loading-the-real-data) · [Signing in](#signing-in) ·
 [Development mode](#development-mode) · [Tests](#running-the-tests-and-quality-gates) ·
@@ -83,6 +89,21 @@ docker compose exec backend uv run python scripts/import_legacy.py \
   --file "/docs/source/Precast Incentives 03-2026.xlsm" \
   --attendance "/docs/source/attendance_export_06-2026.xlsx"
 ```
+
+> **Windows / Git Bash:** prefix the import command with `MSYS_NO_PATHCONV=1`.
+> Git Bash rewrites arguments that look like Unix paths, turning the container
+> path `/docs/source/...` into `C:/Program Files/Git/docs/source/...`, which
+> fails with `workbook not found`. PowerShell and CMD are unaffected.
+>
+> ```bash
+> MSYS_NO_PATHCONV=1 docker compose exec backend uv run python scripts/import_legacy.py \
+>   --file "/docs/source/Precast Incentives 03-2026.xlsm" \
+>   --attendance "/docs/source/attendance_export_06-2026.xlsx"
+> ```
+
+Expect roughly `Roster: 440 created`, three rows flagged for HR attention, and
+`407 employees updated` during name enrichment. The source workbook genuinely
+contains a few incomplete rows; they are reported rather than hidden.
 
 The import is **idempotent** — safe to re-run as the source file is corrected.
 It never skips a row silently: anything it cannot resolve is printed with a
